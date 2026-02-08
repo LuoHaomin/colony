@@ -62,18 +62,10 @@ pub fn initialize_main_menu(
         .insert(MainMenuButtonStartGame)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
-                text: Text::with_section(
-                    "Start Game",
-                    TextStyle {
-                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                        font_size: 40.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                    },
-                    TextAlignment {
-                        vertical: VerticalAlign::Center,
-                        horizontal: HorizontalAlign::Center,
-                    },
-                ),
+                text: Text::new("Start Game".to_string()),
+                // font and color as separate components
+                TextFont { font: asset_server.load("fonts/FiraSans-Bold.ttf").into(), font_size: 40.0, ..default() },
+                TextColor(Color::srgb(0.9, 0.9, 0.9).into()),
                 ..Default::default()
             });
         });
@@ -97,18 +89,9 @@ pub fn initialize_main_menu(
         .insert(MainMenuButtonLoadGame)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
-                text: Text::with_section(
-                    "Load Game",
-                    TextStyle {
-                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                        font_size: 40.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                    },
-                    TextAlignment {
-                        vertical: VerticalAlign::Center,
-                        horizontal: HorizontalAlign::Center,
-                    },
-                ),
+                text: Text::new("Load Game".to_string()),
+                TextFont { font: asset_server.load("fonts/FiraSans-Bold.ttf").into(), font_size: 40.0, ..default() },
+                TextColor(Color::srgb(0.9, 0.9, 0.9).into()),
                 ..Default::default()
             });
         });

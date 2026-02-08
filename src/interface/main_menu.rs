@@ -25,7 +25,7 @@ fn open_main_menu(
     font: Res<MyFont>,
 ) {
     // Center window
-    let window = windows.single_mut();
+    let mut window = windows.single_mut().expect("No primary window");
     let width = window.width();
     let height = window.height();
     let _window_size = Vec2::new(width, height);
@@ -49,28 +49,14 @@ fn open_main_menu(
                 height: Val::Px(height),
                 ..Default::default()
             },
-            background_color: Color::rgba(0.65, 1.0, 0.65, 0.65).into(),
+            background_color: Color::srgba(0.65, 1.0, 0.65, 0.65).into(),
             ..Default::default()
         }).insert(MainMenuOverlay)
         .with_children(|parent| {
-            parent.spawn(TextBundle {
-                text: Text::from_section("WELCOME TO", text_style.clone())
-                .with_alignment(TextAlignment::Center),
-                ..default()
-            })
+            parent.spawn((Text::new("WELCOME TO".to_string()), TextFont { font: text_style.font.clone().into(), font_size: text_style.font_size, ..default() }, TextColor(text_style.color.into())));
             ;
-            parent.spawn(TextBundle {
-                text: Text::from_section("COLONY", text_style.clone())
-                .with_alignment(TextAlignment::Center),
-                ..default()
-            });
-            parent.spawn(
-                TextBundle::from_section("Get Started", text_style.clone())
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(20.0)),
-                    ..default()
-                })
-            );
+            parent.spawn((Text::new("COLONY".to_string()), TextFont { font: text_style.font.clone().into(), font_size: text_style.font_size, ..default() }, TextColor(text_style.color.into())));
+            parent.spawn((Text::new("Get Started".to_string()), TextFont { font: text_style.font.clone().into(), font_size: text_style.font_size, ..default() }, TextColor(text_style.color.into()), Style { margin: UiRect::all(Val::Px(20.0)), ..default() }));
             // Next insert a button
             parent.spawn(ButtonBundle {
                 style: Style {
@@ -81,15 +67,11 @@ fn open_main_menu(
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                background_color: Color::rgb(0.15, 0.15, 0.15).into(),
+                background_color: Color::srgb(0.15, 0.15, 0.15).into(),
                 ..Default::default()
             })
             .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    "Start Game",
-                    text_style.clone(),
-                ).with_text_alignment(TextAlignment::Center)
-                );
+                parent.spawn((Text::new("Start Game".to_string()), TextFont { font: text_style.font.clone().into(), font_size: text_style.font_size, ..default() }, TextColor(text_style.color.into())));
             });
 
 
@@ -125,7 +107,7 @@ pub fn close_main_menu(
     mut query: Query<Entity, With<MainMenuOverlay>>,
 ) {
     for entity in query.iter_mut() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
     // state.set(GameState::InGame).unwrap();
 }

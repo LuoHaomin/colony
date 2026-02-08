@@ -43,7 +43,7 @@ pub fn startup(
     }
 
     let position = Position { x: 30, y: 6, z: 0 };
-    let sprite =  TextureAtlasSprite::new(TileType::Cave.sprite_index());
+    let sprite = TextureAtlasSprite::new(TileType::Cave.sprite_index());
     commands
             .spawn(SpriteSheetBundle {
                 sprite,
@@ -68,7 +68,7 @@ pub fn startup(
         if taken_positions.contains_key(&position) { continue; }
         taken_positions.insert(position, 1);
         let plant_type = biome.plants[rng.gen_range(0..biome.plants.len())];
-        let sprite =  TextureAtlasSprite::new(plant_type.sprite_index());
+        let sprite = TextureAtlasSprite::new(plant_type.sprite_index());
         
         let plant = commands
             .spawn(SpriteSheetBundle {
@@ -103,7 +103,7 @@ pub fn startup(
         if taken_positions.contains_key(&position) { continue; }
         taken_positions.insert(position, 1);
         let object_type = biome.objects[rng.gen_range(0..biome.objects.len())];
-        let sprite =  TextureAtlasSprite::new(object_type.sprite_index());
+        let sprite = TextureAtlasSprite::new(object_type.sprite_index());
         
         let object = commands
             .spawn(SpriteSheetBundle {

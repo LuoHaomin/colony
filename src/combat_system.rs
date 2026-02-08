@@ -13,11 +13,11 @@ impl Plugin for CombatPlugin {
             Update,
             (
             melee::combat_system_melee
-            .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
             .run_if(in_state(GameState::InGame))
             ,
             ranged::combat_system_ranged
-            .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
             .run_if(in_state(GameState::InGame))
             ,
             melee::attacked_entities_system

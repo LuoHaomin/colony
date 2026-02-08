@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::prelude::Parent;
 
 pub fn task_system_chop(
     mut commands: Commands,
@@ -59,7 +60,7 @@ fn spawn_logs(
         let mut p = *targetable_position;
         p.x += if (i%2) == 0 { i/2 } else { -i/2 };
         p.y += if (i%2) == 0 { i/2 } else { -i/2 };
-        let sprite =  TextureAtlasSprite::new( pt.sprite_index() );
+        let sprite = TextureAtlasSprite::new( pt.sprite_index() );
         commands.spawn(SpriteSheetBundle {
             sprite,
             texture_atlas: sprite_sheet.0.clone(),

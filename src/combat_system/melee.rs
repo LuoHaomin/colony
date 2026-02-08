@@ -14,7 +14,7 @@ pub fn combat_system_melee(
                 if entity == targeting.target {
                     entity_found = true;
                     if position.distance(target_position) <= 1 {
-                        let sprite =  TextureAtlasSprite::new(StrikeType::Hit.sprite_index());
+                        let sprite = TextureAtlasSprite::new(StrikeType::Hit.sprite_index());
                         commands
                             .spawn(SpriteSheetBundle {
                                 sprite,
@@ -113,7 +113,7 @@ fn do_melee_damage(
         ;
     body2.attributes.health -= damage;
     if body2.attributes.health <= 0 {
-        commands.entity(attacked_entity).despawn_recursive();
+        commands.entity(attacked_entity).despawn();
     }
     body2.danger = Some(Danger {
         danger_type: DangerType::Attacked,
@@ -162,7 +162,7 @@ pub fn temporary_visual_elements_system(
     time: Res<Time>,
     mut query: Query<(Entity, &mut TemporaryVisualElement)>,
 ) {
-    let delta_seconds = time.delta_seconds();
+    let delta_seconds = time.delta_secs();
     for (entity, mut tve) in query.iter_mut() {
         tve.duration -= delta_seconds;
         if tve.duration <= 0.0 {

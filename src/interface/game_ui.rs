@@ -36,7 +36,7 @@ pub fn initialize_game_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    let _sprite =  TextureAtlasSprite::new(190);
+    let _sprite = TextureAtlasSprite::new(190);
     commands.spawn(NodeBundle {
         style: Style {
             position_type: PositionType::Absolute,
@@ -48,7 +48,7 @@ pub fn initialize_game_ui(
             height: Val::Px(32.0),
             ..Default::default()
         },
-        background_color: Color::rgba(0.65, 0.65, 0.65, 0.65).into(),
+        background_color: Color::srgba(0.65, 0.65, 0.65, 0.65).into(),
         ..Default::default()
     })
     .with_children(|parent| {
@@ -119,7 +119,7 @@ pub fn start_game_ui(
     ]
     ;
     for button in game_buttons.iter() {
-        commands.entity(button).despawn_recursive();
+        commands.entity(button).despawn();
     }
     //println!("BUTTON: {:?}", buttons[menu_state.i]);
     if (buttons.len()-1) < menu_state.state.to_index() {
@@ -137,14 +137,10 @@ pub fn start_game_ui(
                 height: Val::Px(64.0),
                 ..default()
             },
-            background_color: Color::rgba(0.65, 0.65, 0.85, 0.65).into(),
+            background_color: Color::srgba(0.65, 0.65, 0.85, 0.65).into(),
             ..default()
         },InGameButton)).with_children(|parent| {
-            parent.spawn(TextBundle {
-                text: Text::from_section(button_text.to_owned(), text_style.clone() )
-                .with_alignment(TextAlignment::Center),
-                ..default()
-            });
+                parent.spawn((Text::new(button_text.to_owned()), TextFont { font: text_style.font.clone().into(), font_size: text_style.font_size, ..default() }, TextColor(text_style.color.into())));
         })
         ;
     }
@@ -160,7 +156,7 @@ pub fn game_ui_click(
     mut dragging: ResMut<Dragging>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        let window = windows.single_mut();
+        let window = windows.single_mut().expect("No primary window");
         let wc = window.cursor_position();
         if let Some(wc) = wc {
             let y = window.height() - wc.y;

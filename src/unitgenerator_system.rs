@@ -15,7 +15,7 @@ pub fn spawn_unit_from_template(
     sprite_sheet: &Res<SpriteSheet>,
     template: &UnitTemplate,
 ) -> Entity {
-    let sprite =  TextureAtlasSprite::new(template.actor_type.sprite_index());
+    let sprite = TextureAtlasSprite::new(template.actor_type.sprite_index());
     let entity = commands
         .spawn(SpriteSheetBundle {
             sprite,

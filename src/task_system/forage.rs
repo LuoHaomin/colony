@@ -60,7 +60,7 @@ fn spawn_food(
     plant.growth = 0.1;
     let pt = plant.plant_type.is_forageable().0.unwrap_or( ItemType::Cabbage );
     if plant.plant_type.is_forageable().2 == ForageType::Once {
-        commands.entity(foragable_entity).despawn_recursive();
+        commands.entity(foragable_entity).despawn();
     } else {
         commands.entity(foragable_entity).remove::<Foragable>();
     }
@@ -70,7 +70,7 @@ fn spawn_food(
         let mut p = *foragable_position;
         p.x += if (i%2) == 0 { i/2 } else { -i/2 };
         p.y += if (i%2) == 0 { i/2 } else { -i/2 };
-        let sprite =  TextureAtlasSprite::new(pt.sprite_index());
+        let sprite = TextureAtlasSprite::new(pt.sprite_index());
         commands.spawn(SpriteSheetBundle {
             sprite,
             texture_atlas: sprite_sheet.0.clone(),

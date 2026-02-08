@@ -13,20 +13,7 @@ pub fn text_system(
         //println!("POS: {}", (i as f32 * 20.0) );
         commands.spawn((
             // Create a TextBundle that has a Text with a single section.
-            TextBundle::from_section(
-                // Accepts a `String` or any type that converts into a `String`, such as `&str`
-                info,
-                TextStyle { font: font.0.clone(), ..default() },
-            ) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Left)
-            // Set the style of the TextBundle itself.
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                bottom: Val::Px(45.0 + (i as f32 * 20.0)),
-                left: Val::Px(15.0),
-                ..default()
-            }),
-            ObjectText,
+            (Text::new(info.to_string()), TextFont { font: font.0.clone().into(), font_size: 18.0, ..default() }, TextColor(Color::WHITE.into()), Style { position_type: PositionType::Absolute, bottom: Val::Px(45.0 + (i as f32 * 20.0)), left: Val::Px(15.0), ..default() }, ObjectText),
         ));
     }
 }
@@ -36,7 +23,7 @@ pub fn text_update_system(
     mut query: Query<&mut Text, With<FpsText>>
 ) {
     for mut text in &mut query {
-        text.sections[1].value = "ZZZZZZ".to_string();
+        *text = Text::new("ZZZZZZ".to_string());
         // if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
         //     if let Some(value) = fps.smoothed() {
         //         // Update the value of the second section

@@ -31,7 +31,7 @@ pub fn task_system_zone(
                     }
                     ZoneType::Construction => {
                         spawn_building(&mut commands, targetable_position, &sprite_sheet, zone);
-                        commands.entity(targetable_entity).despawn_recursive();
+                        commands.entity(targetable_entity).despawn();
                     }
                     _ => {}
                 }
@@ -62,7 +62,7 @@ fn spawn_plant(
     zone: &Zone,
 ) {
     // commands.entity(foragable_entity).remove::<Foragable>();
-    let sprite =  TextureAtlasSprite::new(zone.item_type.sprite_index());
+    let sprite = TextureAtlasSprite::new(zone.item_type.sprite_index());
     commands.spawn(SpriteSheetBundle {
         sprite,
         texture_atlas: sprite_sheet.0.clone(),
@@ -87,7 +87,7 @@ fn spawn_building(
     zone: &Zone,
 ) {
     // commands.entity(foragable_entity).remove::<Foragable>();
-    let sprite =  TextureAtlasSprite::new(zone.item_type.sprite_index());
+    let sprite = TextureAtlasSprite::new(zone.item_type.sprite_index());
     commands.spawn(SpriteSheetBundle {
         sprite,
         texture_atlas: sprite_sheet.0.clone(),

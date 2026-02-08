@@ -15,7 +15,7 @@ pub fn on_pause(
             height: Val::Percent(100.0),
             ..Default::default()
         },
-        background_color: Color::rgba(0.75, 0.55, 0.55, 0.35).into(),
+        background_color: Color::srgba(0.75, 0.55, 0.55, 0.35).into(),
         ..Default::default()
     })
     .insert(PauseOverlay);

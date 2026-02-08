@@ -1,5 +1,7 @@
 use crate::prelude::*;
 use crate::selection_systems::SelectionEvent;
+use bevy::ecs::event::{EventReader, EventWriter};
+use bevy::prelude::Parent;
 
 // Make plugin.
 pub struct ClickPlugin;
@@ -58,8 +60,8 @@ pub fn mouse_click_input(
     mut selection_event: EventWriter<SelectionEvent>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        let (camera, camera_transform) = q_camera.single();
-        let window = windows.single();
+        let (camera, camera_transform) = q_camera.single().expect("No camera");
+        let window = windows.single().expect("No primary window");
         let mut position = None;
         let wc = window.cursor_position();
         if let Some(wc) = wc {
@@ -91,9 +93,9 @@ pub fn mouse_click_input(
             }
             if y < 164.0 { return; }
         }
-        if let Some(screen_pos) = window.cursor_position() {
-            position = Some(mouse_to_position(camera, camera_transform, window, screen_pos));
-        }
+            if let Some(screen_pos) = window.cursor_position() {
+                position = Some(mouse_to_position(camera, camera_transform, window, screen_pos));
+            }
         if let Some(position) = position {
             event.send(ObjectFinderEvent { position });
             dragging.dragging = true;
@@ -121,8 +123,8 @@ pub fn mouse_drag_system(
     if !dragging.dragging { return; }
     if dragging.start_position.is_none() { return; }
     let start_position = dragging.start_position.unwrap();
-    let (camera, camera_transform) = q_camera.single();
-    let window = windows.single();
+    let (camera, camera_transform) = q_camera.single().expect("No camera");
+    let window = windows.single().expect("No primary window");
     let mut end_position = None;
     if let Some(screen_pos) = window.cursor_position() {
         end_position = Some(mouse_to_position(camera, camera_transform, window, screen_pos));
@@ -136,7 +138,7 @@ pub fn mouse_drag_system(
             if highlighted.is_some() { continue; }
             let highlight_box = commands.spawn(SpriteBundle {
                 sprite: Sprite {
-                    color: Color::rgba(1.0, 1.0, 1.0, 0.2),
+                    color: Color::srgba(1.0, 1.0, 1.0, 0.2),
                     custom_size: Some(Vec2::new(TILE_SIZE, TILE_SIZE)),
                     ..default()
                 },
@@ -164,8 +166,8 @@ pub fn mouse_move_system(
     positions: Query<(Entity, &Position, Option<&Brain>, Option<&Food>, Option<&Plant>)>,
     mut object_info: ResMut<SelectedObjectInformation>,
 ) {
-    let (camera, camera_transform) = q_camera.single();
-    let window = windows.single();
+    let (camera, camera_transform) = q_camera.single().expect("No camera");
+    let window = windows.single().expect("No primary window");
     let mut pos = None;
     if let Some(screen_pos) = window.cursor_position() {
         pos = Some(mouse_to_position(camera, camera_transform, window, screen_pos));
@@ -225,34 +227,10 @@ fn mouse_to_position(
     window: &Window,
     screen_pos: Vec2,
 ) -> Position {
-    // get the size of the window
-    let window_size = Vec2::new(window.width(), window.height());
-
-    // Invert the Y-axis by subtracting the screen_pos.y from the window height
-    let screen_pos = Vec2::new(screen_pos.x, window_size.y - screen_pos.y);
-    
-    // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
-    let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
-
-    // matrix for undoing the projection and camera transform
-    let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix().inverse();
-
-    // use it to convert ndc to world-space coordinates
-    let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
-
-    // reduce it to a 2D value
-    let mut world_pos: Vec2 = world_pos.truncate();
-
-    // get a Position
-    //println!("World coords: {}/{}", world_pos.x, world_pos.y);
-    world_pos.x += TILE_SIZE / 2.0;
-    world_pos.y += TILE_SIZE / 2.0;
-    
-
-    // eprintln!("World coords: {}/{}", world_pos.x, world_pos.y);
-    // eprintln!("Position: {}/{}", position.x, position.y);
-    // event.send(ObjectFinderEvent { position });
-    // dragging.dragging = true;
-    // dragging.start_position = Some(position);
-    Position { x: (world_pos.x / TILE_SIZE) as i32, y: (world_pos.y / TILE_SIZE) as i32, z: 0 }
+    // Simplified mapping: convert screen coordinates directly to tile coordinates.
+    // Note: this is an approximation that assumes a 1:1 mapping between screen pixels and world units.
+    let window_size_y = window.height();
+    let world_x = screen_pos.x;
+    let world_y = window_size_y - screen_pos.y;
+    Position { x: (world_x / TILE_SIZE) as i32, y: (world_y / TILE_SIZE) as i32, z: 0 }
 }

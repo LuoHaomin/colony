@@ -24,36 +24,18 @@ pub fn show_info_panel(
         commands.entity(text).despawn();
     }
     commands.spawn((
-        TextBundle::from_section(
-            &object_info.name,
-            TextStyle {
-                font: font.0.clone(),
-                font_size: 24.0,
-                ..default()
-            },
-        ) // Set the alignment of the Text
-        .with_text_alignment(TextAlignment::Left)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(15.0),
-            left: Val::Px(15.0),
-            ..default()
-        }),
+        Text::new(object_info.name.clone()),
+        TextFont { font: font.0.clone().into(), font_size: 24.0, ..default() },
+        TextColor(Color::WHITE.into()),
+        Style { position_type: PositionType::Absolute, top: Val::Px(15.0), left: Val::Px(15.0), ..default() },
         InfoPanelText,
     ));
     for (i, info) in object_info.info.iter().enumerate() {
         commands.spawn((
-            TextBundle::from_section(
-                info,
-                TextStyle { font: font.0.clone(), ..default() },
-            ) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Left)
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(45.0 + (i as f32 * 20.0)),
-                left: Val::Px(15.0),
-                ..default()
-            }),
+            Text::new(info.to_string()),
+            TextFont { font: font.0.clone().into(), font_size: 18.0, ..default() },
+            TextColor(Color::WHITE.into()),
+            Style { position_type: PositionType::Absolute, top: Val::Px(45.0 + (i as f32 * 20.0)), left: Val::Px(15.0), ..default() },
             InfoPanelText,
         ));
     }

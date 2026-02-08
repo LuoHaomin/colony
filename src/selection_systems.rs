@@ -1,4 +1,7 @@
 use super::prelude::*;
+use bevy::ecs::event::EventReader;
+use bevy::prelude::Parent;
+use bevy::text::{Text2dBundle, TextStyle, Text};
 
 // Make plugin.
 pub struct SelectionPlugin;
@@ -55,16 +58,15 @@ pub fn select_foragables(
     for (entity, foragable) in query.iter_mut() {
         if foragable.is_some() {
             commands.entity(entity).insert(WorkTarget);
-            let child = commands.spawn((
-                Text2dBundle {
-                    text: Text::from_section("X", TextStyle { font: font.0.clone(), ..default() })
-                        .with_alignment(TextAlignment::Center),
-                    ..default()
-                },
-                WorkMarker
-            ))
-            .insert(Transform::from_xyz(10.0, 20.0, 100.0)).id();
-            commands.entity(entity).push_children(&[child]);
+                let child = commands.spawn((
+                    Text2dBundle {
+                        text: Text::new("X".to_string()),
+                        ..default()
+                    },
+                    WorkMarker
+                ))
+                .insert(Transform::from_xyz(10.0, 20.0, 100.0)).id();
+                commands.entity(entity).add_child(child);
         }
     }
     unhighlight(commands, highlighteds, highlightboxes);
@@ -172,7 +174,7 @@ pub fn select_zoning(
             );
             let zonemarker = commands.spawn( (SpriteBundle {
                 sprite: Sprite {
-                        color: Color::rgba(0.8, 0.8, 1.0, 0.1),
+                    color: Color::srgba(0.8, 0.8, 1.0, 0.1),
                         custom_size: Some(Vec2::new(TILE_SIZE, TILE_SIZE)),
                         ..default()
                     },
@@ -180,7 +182,7 @@ pub fn select_zoning(
                 ..default()
             }, ZoneMarker))
             .id();
-            commands.entity(entity).push_children(&[zonemarker]);
+            commands.entity(entity).add_child(zonemarker);
         }
     }
     unhighlight(commands, highlighteds, highlightboxes);
@@ -256,13 +258,12 @@ pub fn create_marker(
     font: Handle<Font>,
 ) {
     let child = commands.spawn((
-        Text2dBundle {
-            text: Text::from_section("X", TextStyle { font: font, ..default() })
-                .with_alignment(TextAlignment::Center),
+            Text2dBundle {
+            text: Text::new("X".to_string()),
             ..default()
         },
         WorkMarker
     ))
     .insert(Transform::from_xyz(10.0, 20.0, 100.0)).id();
-    commands.entity(*entity).push_children(&[child]);
+    commands.entity(*entity).add_child(child);
 }

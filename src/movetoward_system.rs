@@ -11,7 +11,7 @@ impl Plugin for MovementPlugin {
         .add_systems(
             Update,
             movement_along_path
-            .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
             .run_if(in_state(GameState::InGame))
         )
         .add_systems(

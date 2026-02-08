@@ -1,4 +1,5 @@
 use super::prelude::*;
+use bevy::prelude::Parent;
 mod chop;
 mod eat;
 mod forage;
@@ -21,39 +22,39 @@ impl Plugin for TaskPlugin {
             Update,
             (
                 eat::task_system_eat
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 sleep::task_system_sleep
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 sleep::task_system_sleeping
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 play::task_system_playing
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 meander::task_system_meander
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 work::task_system_work
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 forage::task_system_forage
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 chop::task_system_chop
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
                 plant::task_system_zone
-                .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             )
         )

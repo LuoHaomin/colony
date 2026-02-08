@@ -1,4 +1,5 @@
 use super::prelude::*;
+use bevy::text::{Text2dBundle, TextStyle, Text};
 
 pub fn names_system(
     mut commands: Commands,
@@ -16,8 +17,7 @@ pub fn names_system(
         };
         let child = commands.spawn((
             Text2dBundle {
-                text: Text::from_section(has_name.name.clone(), text_style.clone())
-                    .with_alignment(TextAlignment::Center),
+                text: Text::new(has_name.name.clone()),
                 ..default()
             },
             TextName
@@ -26,7 +26,7 @@ pub fn names_system(
         .insert(IsName)
         .id()
         ;
-        commands.entity(entity).push_children(&[child]);
+        commands.entity(entity).add_child(child);
         //commands.entity(entity).remove::<HasName>();
         commands.entity(entity).insert(HasNameShown);
     }

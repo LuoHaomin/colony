@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use bevy::prelude::Parent;
+use bevy::text::{Text2dBundle, TextStyle, Text};
 
 pub fn status_display_system (
     mut commands: Commands,
@@ -52,8 +54,7 @@ pub fn status_display_system (
         };
         let child = commands.spawn((
             Text2dBundle {
-                text: Text::from_section(chosen_text, text_style.clone())
-                    .with_alignment(TextAlignment::Center),
+                text: Text::new(chosen_text),
                 ..default()
             },
             TextName
@@ -62,6 +63,6 @@ pub fn status_display_system (
         .insert(IsName)
         .id()
         ;
-        commands.entity(entity).push_children(&[child]);
+        commands.entity(entity).add_child(child);
     }
 }

@@ -47,7 +47,6 @@ use unitgenerator_system::*;
 fn main() {
     //println!("Hello, world!");
     App::new()
-        .insert_resource(Msaa::Off)
         .add_plugins((DefaultPlugins, BiomePlugin, StartupPlugin))
         .add_systems(
             PreStartup, (load_sprites, load_font, load_sfx)
@@ -60,12 +59,12 @@ fn main() {
         .add_systems(
             Startup, (generate_map, setup_camera, text_test, set_window_title, set_window_icon, set_window_maximized)
         )
-        .add_state::<GameState>()
+        .add_sub_state::<GameState>()
         .add_plugins((MainMenusPlugin, ButtonPlugin))
         .add_systems(
             Update,
             movement_random
-            .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.1)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.1)))
             .run_if(in_state(GameState::InGame))
         )
         .add_plugins(
@@ -74,7 +73,7 @@ fn main() {
         .add_systems(
             Update,
             status_display_system
-            .run_if(bevy::time::common_conditions::on_timer(bevy::utils::Duration::from_secs_f32(0.5)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
             .run_if(in_state(GameState::InGame))
         )
         .add_systems(Update, (
@@ -89,10 +88,6 @@ fn main() {
             nest_system,
         ))
         .add_event::<FoodNotifEvent>()
-        .add_systems(
-            Update,
-            bevy::window::close_on_esc
-        )
         .add_systems(
             OnEnter(GameState::Paused), 
             on_pause
@@ -111,7 +106,7 @@ fn main() {
 // }
 
 fn setup_camera(mut commands: Commands) {
-    let mut camera = Camera2dBundle::default();
+    let mut camera = bevy::prelude::Camera2dBundle::default();
     camera.transform.translation.x = TILE_SIZE * 19.0;
     camera.transform.translation.y = TILE_SIZE * 11.0;
     commands.spawn(camera);
