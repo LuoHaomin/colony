@@ -82,10 +82,10 @@ fn main() {
                 rendering::text_system::text_system,
                 rendering::names_system::names_system,
                 rendering::text_system::text_update_system,
-                rendering::interface::keyboard_input,
                 rendering::interface::scrollwheel_input,
             ).run_if(in_state(GameState::InGame))
         )
+        .add_systems(Update, rendering::interface::keyboard_input)
         .run();
 }
 

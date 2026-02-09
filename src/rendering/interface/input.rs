@@ -10,13 +10,15 @@ pub fn keyboard_input(
     if input.just_pressed(KeyCode::Space) {
         // Pause or Unpause.
         match gamestate.get() {
+            GameState::MainMenu => {
+                nextstate.set(GameState::InGame);
+            }
             GameState::InGame => {
                 nextstate.set(GameState::Paused);
             }
             GameState::Paused => {
                 nextstate.set(GameState::InGame);
             }
-            _ => {}
         }
     }
     for mut transform in camera.iter_mut() {

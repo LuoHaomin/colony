@@ -39,8 +39,19 @@ fn open_main_menu(
             parent.spawn((Text::new("WELCOME TO".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
             parent.spawn((Text::new("COLONY".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
             parent.spawn((Text::new("Get Started".to_string()), text_font.clone(), TextColor(Color::WHITE.into()), Node { margin: UiRect::all(Val::Px(20.0)), ..default() }));
-            // Next insert a button (simple node as placeholder)
-            parent.spawn((Node { width: Val::Px(100.0), height: Val::Px(30.0), margin: UiRect::all(Val::Px(20.0)), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() }, BackgroundColor(Color::srgb(0.15, 0.15, 0.15))))
+            // Next insert a button
+            parent.spawn((
+                Button,
+                Node { 
+                    width: Val::Px(200.0), 
+                    height: Val::Px(50.0), 
+                    margin: UiRect::all(Val::Px(20.0)), 
+                    justify_content: JustifyContent::Center, 
+                    align_items: AlignItems::Center, 
+                    ..default() 
+                }, 
+                BackgroundColor(Color::srgb(0.15, 0.15, 0.15))
+            ))
             .with_children(|parent| {
                 parent.spawn((Text::new("Start Game".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
             });
