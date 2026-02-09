@@ -125,3 +125,4 @@ pub fn object_finder_system(
 pub struct ObjectFinderEvent {
     pub position: Position,
 }
+

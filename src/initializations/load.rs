@@ -16,7 +16,7 @@ pub fn load_font(
     asset_server: Res<AssetServer>,
     mut commands: Commands,
 ) {
-    commands.insert_resource(MyFont(asset_server.load("fonts/FiraSans-Bold.ttf")));
+    commands.insert_resource(MyFont(asset_server.load("fonts/FiraSans-Medium.ttf")));
 }
 
 pub fn load_mesh_assets(

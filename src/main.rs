@@ -30,6 +30,12 @@ fn main() {
         )
         .insert_resource(SelectedObjectInformation::default())
         .insert_resource(InfoPanelInformation::default())
+        .init_resource::<TileHash>()
+        .init_resource::<Dragging>()
+        .init_resource::<GameSpeed>()
+        .init_resource::<UniversalMeshAssets>()
+        .init_resource::<SpriteSheet>()
+        .init_resource::<MyFont>()
         .insert_resource(MenuState {
             state: MenuStates::Home,
         })

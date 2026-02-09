@@ -5,6 +5,7 @@
         "Set-Content": true,
         "cargo check": true,
         "mv": true,
-        "Out-File": true
+        "Out-File": true,
+        "cargo run": true
     }
 }

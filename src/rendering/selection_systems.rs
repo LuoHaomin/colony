@@ -24,7 +24,7 @@ pub fn select_foragables(
     mut selection_reader: MessageReader<SelectionEvent>,
     mut query: Query<(Entity, Option<&Foragable>), With<Highlighted>>,
 ) {
-    for event in selection_reader.read() {
+    for _event in selection_reader.read() {
         // Logic for selection
     }
 }
