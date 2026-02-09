@@ -1,5 +1,10 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "cargo build": true
+        "cargo build": true,
+        "ForEach-Object": true,
+        "Set-Content": true,
+        "cargo check": true,
+        "mv": true,
+        "Out-File": true
     }
 }

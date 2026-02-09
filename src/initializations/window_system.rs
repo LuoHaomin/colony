@@ -12,9 +12,10 @@ pub fn set_window_title(
 }
 pub fn set_window_icon(
     // we have to use `NonSend` here
-    winit_windows: NonSend<WinitWindows>,
-    primary_windows: Query<(Entity, &mut Window), With<PrimaryWindow>>,
+    _winit_windows: NonSend<WinitWindows>,
+    _primary_windows: Query<(Entity, &mut Window), With<PrimaryWindow>>,
 ) {
+    /*
     let window = primary_windows.single().expect("No primary window");
     let primary = winit_windows.get_window(window.0).unwrap();
     
@@ -31,6 +32,7 @@ pub fn set_window_icon(
 
     let icon = bevy::window::WindowIcon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
     primary.set_window_icon(Some(icon));
+    */
 }
 
 pub fn set_window_maximized(

@@ -1,55 +1,32 @@
-mod prelude;
+﻿mod prelude;
 pub use crate::prelude::*;
 
-mod button_system;
-use button_system::*;
-mod combat_system;
-use combat_system::*;
-mod components;
-mod constants;
+mod core;
+mod simulation;
+mod rendering;
 mod initializations;
-use initializations::*;
-mod interface;
-use interface::*;
-mod objects;
-mod monstergenerator_system;
-use monstergenerator_system::*;
-mod moverandom_system;
-use moverandom_system::*;
-mod movetoward_system;
-use movetoward_system::*;
-mod namegiving_system;
-use namegiving_system::*;
-mod names_system;
-use names_system::*;
-mod needs;
-use needs::*;
-mod nest;
-use nest::*;
-mod resources;
-mod seasons;
-use seasons::*;
-mod selection_systems;
-use selection_systems::*;
-mod spoilage_system;
-use spoilage_system::*;
-mod statusdisplay_system;
-use statusdisplay_system::*;
-mod task_system;
-use task_system::*;
-mod text_system;
-use text_system::*;
-mod thinking_system;
-use thinking_system::*;
-mod unitgenerator_system;
-use unitgenerator_system::*;
+
+use crate::core::*;
+use crate::simulation::*;
+use crate::rendering::*;
+use crate::initializations::*;
+use crate::rendering::camera_system::CameraPlugin;
 
 fn main() {
-    //println!("Hello, world!");
     App::new()
-        .add_plugins((DefaultPlugins, BiomePlugin, StartupPlugin))
+        .add_plugins(DefaultPlugins)
+        .add_plugins((
+             initializations::biome::BiomePlugin,
+             initializations::startup::StartupPlugin,
+             CameraPlugin,
+        ))
         .add_systems(
-            PreStartup, (load_sprites, load_font, load_sfx)
+            PreStartup, (
+                initializations::load::load_sprites, 
+                initializations::load::load_font, 
+                initializations::load::load_sfx,
+                initializations::load::load_mesh_assets
+            )
         )
         .insert_resource(SelectedObjectInformation::default())
         .insert_resource(InfoPanelInformation::default())
@@ -57,59 +34,70 @@ fn main() {
             state: MenuStates::Home,
         })
         .add_systems(
-            Startup, (generate_map, setup_camera, text_test, set_window_title, set_window_icon, set_window_maximized)
+            Startup, (
+                initializations::map::generate_map, 
+                setup_camera, 
+                rendering::text_system::text_test, 
+                initializations::window_system::set_window_title, 
+                initializations::window_system::set_window_maximized
+            )
         )
-        .add_sub_state::<GameState>()
-        .add_plugins((MainMenusPlugin, ButtonPlugin))
-        .add_systems(
-            Update,
-            movement_random
-            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.1)))
-            .run_if(in_state(GameState::InGame))
-        )
-        .add_plugins(
-            (SelectionPlugin, MonsterGeneratorPlugin, MovementPlugin, SeasonsPlugin, NeedsPlugin, GameUiPlugin,
-                InfoPanelPlugin, ThinkingPlugin, TaskPlugin, CombatPlugin, SpoilagePlugin, ClickPlugin))
-        .add_systems(
-            Update,
-            status_display_system
-            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-            .run_if(in_state(GameState::InGame))
-        )
-        .add_systems(Update, (
-            text_system,
-            remove_bad_positions,
-            namegiving_system,
-            names_system,
-            text_update_system,
-            movement_toward_attackable,
-            keyboard_input,
-            scrollwheel_input,
-            nest_system,
+        .init_state::<GameState>()
+        .add_plugins((
+            rendering::interface::MainMenusPlugin, 
+            rendering::button_system::ButtonPlugin,
+            rendering::selection_systems::SelectionPlugin,
+            simulation::monstergenerator_system::MonsterGeneratorPlugin,
+            simulation::movetoward_system::MovementPlugin,
+            simulation::seasons::SeasonsPlugin,
+            simulation::needs::NeedsPlugin,
+            rendering::interface::GameUiPlugin,
+            rendering::interface::InfoPanelPlugin,
+            simulation::thinking_system::ThinkingPlugin,
+            simulation::task_system::TaskPlugin,
+            simulation::combat_system::CombatPlugin,
+            simulation::spoilage_system::SpoilagePlugin,
+            rendering::interface::ClickPlugin
         ))
-        .add_event::<FoodNotifEvent>()
         .add_systems(
-            OnEnter(GameState::Paused), 
-            on_pause
+            FixedUpdate, (
+                simulation::moverandom_system::movement_random
+                    .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.1))),
+                remove_bad_positions,
+                simulation::namegiving_system::namegiving_system,
+                simulation::movetoward_system::movement_toward_attackable,
+                simulation::nest::nest_system,
+            ).run_if(in_state(GameState::InGame))
         )
         .add_systems(
-            OnExit(GameState::Paused), 
-            on_unpause
+            Update, (
+                rendering::statusdisplay_system::status_display_system
+                    .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5))),
+                rendering::text_system::text_system,
+                rendering::names_system::names_system,
+                rendering::text_system::text_update_system,
+                rendering::interface::keyboard_input,
+                rendering::interface::scrollwheel_input,
+            ).run_if(in_state(GameState::InGame))
         )
         .run();
 }
 
-// pub fn in_game(
-//     state: Res<GameState>,
-// ) {
-//     *state == GameState::InGame
-// }
-
 fn setup_camera(mut commands: Commands) {
-    let mut camera = bevy::prelude::Camera2dBundle::default();
-    camera.transform.translation.x = TILE_SIZE * 19.0;
-    camera.transform.translation.y = TILE_SIZE * 11.0;
-    commands.spawn(camera);
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(TILE_SIZE * 19.0, TILE_SIZE * 11.0, 500.0)
+            .looking_at(Vec3::new(TILE_SIZE * 19.0, TILE_SIZE * 11.0, 0.0), Vec3::Y),
+    ));
+    
+    commands.spawn((
+        DirectionalLight {
+            illuminance: 5000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 }
 
 fn remove_bad_positions(
