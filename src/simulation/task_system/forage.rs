@@ -1,4 +1,4 @@
-﻿use crate::prelude::*;
+use crate::prelude::*;
 
 pub fn task_system_forage(
     mut commands: Commands,
@@ -35,7 +35,7 @@ pub fn task_system_forage(
 
         if let Some(closest_entity) = closest_entity {
             commands.entity(entity).insert(Targeting { target: closest_entity });
-            commands.entity(entity).insert(Pathing { path: vec![], destination: *closest_position.unwrap() });
+            commands.entity(entity).insert(Pathing { path: vec![], destination: *closest_position.unwrap(), ..default() });
             already_targeted.push(closest_entity);
         } else {
             brain.remotivate();

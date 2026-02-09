@@ -12,7 +12,7 @@ pub fn task_system_zone(
         if pathing.is_some() { continue; }
         if brain.task.is_none() { continue; }
         if ! brain.task.unwrap().is_zone_task() { continue; }
-        let mut nearest_entity: Option<NearestEntity> = None;
+        let mut nearest_entity: Option<NearestTarget> = None;
         'targets: for (targetable_entity, targetable_position, zone) in targetables.iter() {
             if zone.zone_type == ZoneType::Farm && brain.task != Some(Task::Plant) { continue; }
             if zone.zone_type == ZoneType::Construction && brain.task != Some(Task::Construct) { continue; }
@@ -36,7 +36,7 @@ pub fn task_system_zone(
                 if obstacle_position == targetable_position { continue 'targets; }
             }
             if nearest_entity.is_none() || distance < nearest_entity.as_ref().unwrap().distance {
-                nearest_entity = Some(NearestEntity {
+                nearest_entity = Some(NearestTarget {
                     entity: targetable_entity,
                     distance,
                     position: *targetable_position,
@@ -46,9 +46,15 @@ pub fn task_system_zone(
         if let Some(nearest) = nearest_entity {
             already_targeted.push(nearest.entity);
             commands.entity(entity).insert(Targeting { target: nearest.entity });
-            commands.entity(entity).insert(Pathing { path: vec![], destination: nearest.position });
+            commands.entity(entity).insert(Pathing { path: vec![], destination: nearest.position, ..default() });
         }
     }
+}
+
+struct NearestTarget {
+    entity: Entity,
+    distance: i32,
+    position: Position,
 }
 
 fn spawn_item(

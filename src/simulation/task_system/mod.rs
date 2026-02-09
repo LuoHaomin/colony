@@ -1,4 +1,4 @@
-﻿use crate::prelude::*;
+use crate::prelude::*;
 
 mod chop;
 mod eat;
@@ -28,11 +28,11 @@ impl Plugin for TaskPlugin {
                 .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
-                sleep::task_system_sleeping
+                sleep::task_system_sleep
                 .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,
-                play::task_system_playing
+                play::task_system_play
                 .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
                 .run_if(in_state(GameState::InGame))
             ,

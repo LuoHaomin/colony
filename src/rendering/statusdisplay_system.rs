@@ -37,10 +37,10 @@ pub fn status_display_system (
         //     commands.entity(entity).remove_children(&[*child]);
         //     commands.entity(*child).despawn();
         // }
-        if physical_body.index >= vec_statuses.len() {
+        if physical_body.index as usize >= vec_statuses.len() {
             physical_body.index = 0;
         }
-        let chosen_text = vec_statuses[physical_body.index].clone();
+        let chosen_text = vec_statuses[physical_body.index as usize].clone();
         physical_body.index += 1;
         
         // NOW SHOW THE TEXT

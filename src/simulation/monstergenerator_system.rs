@@ -45,7 +45,7 @@ pub fn monster_generator_system(
         if !can_generate {
             continue;
         }
-        let monster = spawn_unit_from_template(&mut commands, new_position, &sprite_sheet, monster_generator.pick(), &mesh_assets);
+        let monster = spawn_unit_from_template(&mut commands, new_position, &sprite_sheet, &monster_generator.pick(), &mesh_assets);
         commands.entity(monster).insert(GeneratedBy { entity });
     }
 }

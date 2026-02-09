@@ -1,4 +1,4 @@
-﻿use crate::prelude::*;
+use crate::prelude::*;
 use crate::rendering::selection_systems::SelectionEvent;
 
 pub struct ClickPlugin;
@@ -29,8 +29,8 @@ pub fn mouse_click_input(
     mut selection_event: MessageWriter<SelectionEvent>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        let (camera, camera_transform) = q_camera.single();
-        let window = windows.single();
+        let Some((camera, camera_transform)) = q_camera.iter().next() else { return; };
+        let Some(window) = windows.iter().next() else { return; };
 
         if let Some(screen_pos) = window.cursor_position() {
             if let Some(position) = mouse_to_position(camera, camera_transform, screen_pos) {
@@ -39,7 +39,7 @@ pub fn mouse_click_input(
                 dragging.start_position = Some(position);
                 selection_event.write(SelectionEvent {
                     selected_position: Some(position),
-                    selected_type: dragging.looking_for
+                    selected_type: dragging.looking_for.clone()
                 });
             }
         }
@@ -58,14 +58,14 @@ pub fn mouse_drag_system(
     mut selection_event: MessageWriter<SelectionEvent>,
 ) {
     if !dragging.dragging { return; }
-    let (camera, camera_transform) = q_camera.single();
-    let window = windows.single();
+    let Some((camera, camera_transform)) = q_camera.iter().next() else { return; };
+    let Some(window) = windows.iter().next() else { return; };
 
     if let Some(screen_pos) = window.cursor_position() {
         if let Some(current_position) = mouse_to_position(camera, camera_transform, screen_pos) {
             selection_event.write(SelectionEvent {
                 selected_position: Some(current_position),
-                selected_type: dragging.looking_for
+                selected_type: dragging.looking_for.clone()
             });
         }
     }
@@ -76,8 +76,8 @@ pub fn mouse_move_system(
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut info_panel: ResMut<InfoPanelInformation>,
 ) {
-    let (camera, camera_transform) = q_camera.single();
-    let window = windows.single();
+    let Some((camera, camera_transform)) = q_camera.iter().next() else { return; };
+    let Some(window) = windows.iter().next() else { return; };
 
     if let Some(screen_pos) = window.cursor_position() {
         if let Some(position) = mouse_to_position(camera, camera_transform, screen_pos) {

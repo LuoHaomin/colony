@@ -1,4 +1,4 @@
-﻿use crate::prelude::*;
+use crate::prelude::*;
 
 pub fn combat_system_melee(
     mut commands: Commands,
@@ -15,8 +15,8 @@ pub fn combat_system_melee(
                     entity_found = true;
                     if position.distance(target_position) <= 1 {
                         let sprite = Sprite::from_atlas_image(
-                            sprite_sheet.0.clone(),
-                            TextureAtlas { layout: sprite_sheet.1.clone(), index: StrikeType::Hit.sprite_index() },
+                            sprite_sheet.handle.clone(),
+                            TextureAtlas { layout: sprite_sheet.layout.clone(), index: StrikeType::Hit.sprite_index() },
                         );
                         commands.spawn((sprite, Transform::from_xyz(target_position.x as f32 * TILE_SIZE, target_position.y as f32 * TILE_SIZE, target_position.z as f32 * TILE_SIZE)))
                             .insert(target_position.clone())

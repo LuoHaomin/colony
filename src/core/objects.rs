@@ -22,7 +22,7 @@ pub struct ItemReplacements {
     pub replacements: Vec<ItemType>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum ItemGroup {
     Logs,
     Statues,
@@ -91,11 +91,14 @@ impl ItemGroup {
     }
 }
 
-#[derive(Component, PartialEq, Copy, Clone, Debug)]
+#[derive(Component, PartialEq, Copy, Clone, Debug, Default)]
 pub enum ItemType {
+    #[default]
     CedarLog,
     PineLog,
     OakLog,
+    Log,
+    Berry,
     StatuePillar1,
     StatuePillar2,
     StatuePillar3,
@@ -173,7 +176,7 @@ pub enum ItemType {
 impl ItemType {
     pub fn sprite_row_and_col(&self) -> (usize, usize) {
         match self {
-            ItemType::CedarLog => (94, 30),
+            ItemType::CedarLog | ItemType::Log => (94, 30),
             ItemType::PineLog => (94, 30),
             ItemType::OakLog => (94, 30),
             ItemType::StatuePillar1 => (19, 12),
@@ -236,7 +239,7 @@ impl ItemType {
             ItemType::WallWood => (6, 32),
             ItemType::Aloe => (67, 57),
             ItemType::Azalea => (67, 57),
-            ItemType::Bush => (67, 57),
+            ItemType::Bush | ItemType::Berry => (67, 57),
             ItemType::Cabbage => (94, 32),
             ItemType::CactusRound => (67, 57),
             ItemType::CactusUp => (67, 57),
@@ -248,6 +251,7 @@ impl ItemType {
             ItemType::FlowerBush => (67, 57),
             ItemType::Vine => (67, 57),
             ItemType::Weed => (67, 57),
+            _ => (0, 0),
         }
     }
     pub fn sprite_index(&self) -> usize {
@@ -264,6 +268,7 @@ impl ItemType {
         match self {
             ItemType::Cabbage => (Some(ItemType::Cabbage), 1, ForageType::Once),
             ItemType::Carrot => (Some(ItemType::Carrot), 1, ForageType::Once),
+            ItemType::Berry => (Some(ItemType::Berry), 1, ForageType::Repeat),
             _ => (None, 0, ForageType::Once),
         }
     }
@@ -279,6 +284,7 @@ impl ItemType {
         match self {
             ItemType::Cabbage => 10.0,
             ItemType::Carrot => 10.0,
+            ItemType::Berry => 5.0,
             _ => 0.0,
         }
     }

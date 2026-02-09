@@ -1,4 +1,4 @@
-﻿use crate::prelude::*;
+use crate::prelude::*;
 
 pub fn task_system_sleep(
     mut commands: Commands,
@@ -39,7 +39,7 @@ pub fn task_system_sleep(
         }
 
         if let Some(bed_pos) = closest_position {
-            commands.entity(entity).insert(Pathing { path: vec![], destination: *bed_pos });
+            commands.entity(entity).insert(Pathing { path: vec![], destination: *bed_pos, ..default() });
         } else {
             brain.task = Some(Task::Sleeping); // Just sleep where you are
         }

@@ -1,5 +1,5 @@
 ﻿use crate::prelude::*;
-use serde::{Deserialize, Serialize};
+
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum GameState {
@@ -36,7 +36,7 @@ pub struct MenuState {
     pub state: MenuStates,
 }
 
-#[derive(Component, PartialEq, Copy, Clone, Debug, Serialize, Deserialize, Eq, Hash, Default)]
+#[derive(Component, PartialEq, Copy, Clone, Debug, Eq, Hash, Default)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
@@ -113,10 +113,77 @@ pub struct PhysicalBody {
     pub attributes: Attributeset,
 }
 
+impl PhysicalBody {
+    pub fn info_panel_needs(&self) -> Vec<String> { vec![] }
+    pub fn info_panel_attributes(&self) -> Vec<String> { vec![] }
+    pub fn info_panel_skills(&self) -> Vec<String> { vec![] }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Affliction {
+    pub location: AfflictionLocation,
+    pub affliction_type: AfflictionType,
+    pub duration: u32,
+    pub severity: u32,
+    pub worsening: bool,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Skill {
+    pub experience: i32,
+    pub exp_lost: i32,
+}
+
 impl Skill {
     pub fn level(&self) -> i32 {
         (self.experience as f32).sqrt() as i32
     }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Skillset {
+    pub animal_raising: Skill,
+    pub brawling: Skill,
+    pub construction: Skill,
+    pub cooking: Skill,
+    pub crafting: Skill,
+    pub doctoring: Skill,
+    pub farming: Skill,
+    pub fishing: Skill,
+    pub foraging: Skill,
+    pub hunting: Skill,
+    pub mining: Skill,
+    pub social: Skill,
+    pub woodcutting: Skill,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Attributeset {
+    pub health: i32,
+    pub strength: i32,
+    pub dexterity: i32,
+    pub constitution: i32,
+    pub intelligence: i32,
+    pub wisdom: i32,
+    pub charisma: i32,
+}
+
+#[derive(Component, Default)]
+pub struct Brain {
+    pub task: Option<Task>,
+    pub personality: Vec<PersonalityTrait>,
+    pub memory: Vec<Memory>,
+    pub motivation: Option<Motivation>,
+    pub order: Option<String>,
+}
+
+impl Brain {
+    pub fn info_panel(&self) -> Vec<String> { vec![] }
+    pub fn remotivate(&mut self) {
+        self.task = None;
+        self.motivation = None;
+    }
+    pub fn get_next_personality_trait(&self) -> Option<PersonalityTrait> { None }
 }
 
 #[derive(Component, Default)]
@@ -127,10 +194,150 @@ pub struct Pathing {
     pub unreachable: bool,
 }
 
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
+pub struct Targeting {
+    pub target: Entity,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Memory {
+    Seen(Entity, Position),
+}
+
+#[derive(Component, Debug, Clone, Copy, PartialEq)]
+pub enum PersonalityType {
+    Human, Vicious, None, Territorial
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PersonalityTrait {
+    Human, Vicious, None, Territorial, Creature
+}
+
+#[derive(Component, PartialEq, Copy, Clone, Debug, Default)]
+pub enum Task {
+    #[default]
+    Idle,
+    Crisis, Flee, Fight, Eat, Hospital, Sleep, Sleeping, Play, Order, Work, Personality, Meander,
+    Doctor, Forage, Plant, Harvest, Mine, Chop, Construct, Hunt, Milk, Cook, Fish, Craft, Clean, Pickup, Carrying
+}
+
+impl Task {
+    pub fn is_zone_task(&self) -> bool {
+        matches!(self, Task::Plant | Task::Construct | Task::Carrying)
+    }
+    pub fn get_steps(&self) -> Self {
+        *self
+    }
+}
+
+#[derive(Component, PartialEq, Copy, Clone, Debug)]
+pub enum Motivation {
+    Crisis, Rage, Order, Danger, Hunger, Thirst, Tired, Injured, Sick, Bored, Happy, Sad, Angry, Lonely, Love, Fear, Hate, Work, Personality, Meander, Idle,
+    Eat, Hospital, Sleep, Play
+}
+
+#[derive(Component, PartialEq, Copy, Clone, Debug)]
+pub enum ForageType {
+    Once, Repeat
+}
+
+#[derive(Component, Debug, Clone, Copy, PartialEq)]
+pub enum ActorType {
+    Man, Woman, Elf, Dwarf, Spider, Rat, Cyclops, Monster, Crab
+}
+
 #[derive(Component, Clone, PartialEq, Debug, Default)]
 pub enum SelectableType {
     #[default]
     Nothing, Carryable, Choppable, Constructable, Foragable, Harvestable, Huntable, Mineable, Unselecting, Unzoning, Zoning, Farm, Build, Tasks
+}
+
+#[derive(Component)]
+pub struct WorkTarget;
+
+#[derive(Component)]
+pub struct Renderable {
+    pub fg: Color,
+    pub bg: Color,
+}
+
+#[derive(Component, Default)]
+pub struct Bed;
+
+#[derive(Component, Debug)]
+pub struct Player {}
+
+#[derive(Component)]
+pub struct Foragable;
+
+#[derive(Component)]
+pub struct Choppable;
+
+#[derive(Component)]
+pub struct Harvestable;
+
+#[derive(Component)]
+pub struct Mineable;
+
+#[derive(Component)]
+pub struct Zone {
+    pub zone_type: ZoneType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum ZoneType {
+    #[default]
+    Farm, Storage, Construction, Avoid
+}
+
+#[derive(Component)]
+pub struct Inventory {
+    pub items: Vec<Entity>,
+}
+
+#[derive(Component)]
+pub struct Item {
+    pub item_type: ItemType,
+}
+
+#[derive(Component)]
+pub struct Highlighted;
+
+#[derive(Component)]
+pub struct Selected;
+
+#[derive(Component)]
+pub struct WorkMarker;
+
+#[derive(Component, Default)]
+pub struct Nest {
+    pub position: Position,
+}
+
+#[derive(Component)]
+pub struct Attackable;
+
+#[derive(Component)]
+pub struct Name {
+    pub name: String,
+}
+
+#[derive(Component)]
+pub struct StatusDisplay {
+    pub text: String,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum AfflictionLocation {
+    #[default]
+    Head, LeftArm, RightArm, LeftLeg, RightLeg, Torso, Bladder, Intestines, Genitals, Heart, Lungs, Brain, Stomach, Liver, Spleen, Kidneys
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum AfflictionType {
+    #[default]
+    Pain, Inflammation, Disease, Wound, BrokenBone, Cut, Frostbite, Infection
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -145,6 +352,23 @@ pub enum DangerType {
 }
 
 #[derive(Component)]
+pub struct HasName {
+    pub name: String,
+}
+
+#[derive(Component)]
+pub struct ClickedOn;
+
+#[derive(Component)]
+pub struct Plant {
+    pub growth: f32,
+    pub plant_type: ItemType,
+}
+
+#[derive(Component)]
+pub struct GiveMeAName;
+
+#[derive(Component)]
 pub struct MonsterGenerator {
     pub monsters: Vec<(crate::simulation::unitgenerator_system::UnitTemplate, u32)>,
 }
@@ -152,5 +376,75 @@ pub struct MonsterGenerator {
 impl MonsterGenerator {
     pub fn pick(&self) -> crate::simulation::unitgenerator_system::UnitTemplate {
         self.monsters[0].0.clone()
+    }
+}
+
+#[derive(Component)]
+pub struct Logs;
+
+#[derive(Component)]
+pub struct Attacked {
+    pub attacker: Entity,
+}
+
+#[derive(Component, Default)]
+pub struct TemporaryVisualElement {
+    pub duration: f32,
+}
+
+#[derive(Component, Default)]
+pub struct Dying;
+
+#[derive(Component)]
+pub struct GeneratedBy { pub entity: Entity }
+
+#[derive(Component)]
+pub struct MoveRandom;
+
+#[derive(Component)]
+pub struct MoveTowardsNearestAttackable;
+
+#[derive(Component, Default)]
+pub struct Food {
+    pub spoilage: f32,
+    pub spoilage_rate: f32,
+}
+
+#[derive(Component)]
+pub struct Carryable;
+
+#[derive(Component)]
+pub struct InGameButton;
+
+#[derive(Component)]
+pub struct PauseOverlay;
+
+#[derive(Component)]
+pub struct MainMenuOverlay;
+
+#[derive(Component)]
+pub struct TextName;
+
+#[derive(Component)]
+pub struct IsName;
+
+#[derive(Component, Default)]
+pub struct HasNameShown;
+
+#[derive(Component)]
+pub struct SetNest;
+
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
+pub enum StrikeType {
+    Hit,
+    Miss,
+}
+
+impl StrikeType {
+    pub fn sprite_index(&self) -> usize {
+        match self {
+            StrikeType::Hit => 0,
+            StrikeType::Miss => 1,
+        }
     }
 }
