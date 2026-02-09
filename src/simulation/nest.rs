@@ -5,7 +5,10 @@ pub fn nest_system(
     query: Query<(Entity, &Position), (Without<Nest>, With<SetNest>)>,
 ) {
     for (entity, position) in query.iter() {
-        commands.entity(entity).insert(Nest { position: position.clone() });
+        commands.entity(entity).insert(Nest { position: *position });
+        commands.entity(entity).remove::<SetNest>();
     }
 }
 
+#[derive(Component)]
+pub struct SetNest;

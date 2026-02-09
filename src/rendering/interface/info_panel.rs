@@ -1,16 +1,10 @@
-use crate::prelude::*;
+﻿use crate::prelude::*;
 
-// Create plugin.
 pub struct InfoPanelPlugin;
 
 impl Plugin for InfoPanelPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_systems(
-            Update,
-            (show_info_panel, info_system)
-        )
-        ;
+        app.add_systems(Update, (show_info_panel, info_system));
     }
 }
 
@@ -23,10 +17,14 @@ pub fn show_info_panel(
     for text in texts.iter() {
         commands.entity(text).despawn();
     }
-    commands.spawn((Text::new(object_info.name.clone()), TextFont { font: font.0.clone().into(), font_size: 24.0, ..default() }, TextColor(Color::WHITE.into()), Node { position_type: PositionType::Absolute, top: Val::Px(15.0), left: Val::Px(15.0), ..default() }, InfoPanelText,));
-    for (i, info) in object_info.info.iter().enumerate() {
-        commands.spawn((Text::new(info.to_string()), TextFont { font: font.0.clone().into(), font_size: 18.0, ..default() }, TextColor(Color::WHITE.into()), Node { position_type: PositionType::Absolute, top: Val::Px(45.0 + (i as f32 * 20.0)), left: Val::Px(15.0), ..default() }, InfoPanelText,));
-    }
+    // Simple header
+    commands.spawn((
+        Text::new(object_info.name.clone()),
+        TextFont { font: font.0.clone(), font_size: 24.0, ..default() },
+        TextColor(Color::WHITE),
+        Node { position_type: PositionType::Absolute, top: Val::Px(15.0), left: Val::Px(15.0), ..default() },
+        InfoPanelText,
+    ));
 }
 
 pub fn info_system(
@@ -34,27 +32,29 @@ pub fn info_system(
     mut people: Query<(Entity, &Position, &Brain, &PhysicalBody, Option<&HasName>), With<ClickedOn>>,
     mut info_panel: ResMut<InfoPanelInformation>,
 ) {
-    if let Some((_, position, brain, physical_body, has_name)) = people.iter_mut().last() {
-        if let Some(has_name) = has_name {
-            info_panel.name = has_name.name.clone();
-        } else {
-            info_panel.name = String::from("");
-        }
-        info_panel.info = vec![];
-        info_panel.info.push(format!("Position: {}, {}", position.x, position.y));
-        info_panel.info.extend_from_slice(&physical_body.info_panel_needs());
-        info_panel.info.extend_from_slice(&brain.info_panel());
-        info_panel.needs.extend_from_slice(&physical_body.info_panel_needs());
-        info_panel.attributes.extend_from_slice(&physical_body.info_panel_attributes());
-        info_panel.skills.extend_from_slice(&physical_body.info_panel_skills());
+    if let Some((_entity, position, brain, physical_body, has_name)) = people.iter_mut().last() {
+        info_panel.name = has_name.map(|h| h.name.clone()).unwrap_or_default();
+        info_panel.info = vec![format!("Position: {}, {}", position.x, position.y)];
+        info_panel.info.extend(physical_body.info_panel_needs());
+        info_panel.info.extend(brain.info_panel());
     }
-    let count = people.iter().count();
-    for (index, (entity, _, _, _, _)) in people.iter_mut().enumerate() {
-        if index < count - 1 {
-            commands.entity(entity).remove::<ClickedOn>();
+    
+    // Clear old clicks
+    let entities: Vec<Entity> = people.iter().map(|(e, ..)| e).collect();
+    if entities.len() > 1 {
+        for e in &entities[0..entities.len()-1] {
+            commands.entity(*e).remove::<ClickedOn>();
         }
     }
 }
 
 #[derive(Component)]
 pub struct InfoPanelText;
+
+#[derive(Component)]
+pub struct ClickedOn;
+
+#[derive(Component)]
+pub struct HasName {
+    pub name: String,
+}

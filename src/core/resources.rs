@@ -9,13 +9,22 @@ pub struct TileHash {
 #[derive(Resource, Default)]
 pub struct SpriteSheet {
     pub handle: Handle<Image>,
+    pub layout: Handle<TextureAtlasLayout>,
 }
+
+// For backward compatibility with initialization in load.rs
+#[allow(non_snake_case)]
+pub fn SpriteSheet(handle: Handle<Image>, layout: Handle<TextureAtlasLayout>) -> SpriteSheet {
+    SpriteSheet { handle, layout }
+}
+
+#[derive(Resource, Default)]
+pub struct MyFont(pub Handle<Font>);
 
 #[derive(Resource, Default)]
 pub struct UniversalMeshAssets {
     pub meshes: HashMap<String, Handle<Mesh>>,
     pub materials: HashMap<String, Handle<StandardMaterial>>,
-    // Fields for backward compatibility or direct access
     pub cube: Handle<Mesh>,
     pub sphere: Handle<Mesh>,
     pub plane: Handle<Mesh>,
@@ -30,10 +39,10 @@ pub struct UniversalMeshAssets {
 
 impl UniversalMeshAssets {
     pub fn get_mesh(&self, name: &str) -> Handle<Mesh> {
-        self.meshes.get(name).cloned().unwrap_or_default()
+        self.meshes.get(name).cloned().unwrap_or_else(|| self.cube.clone())
     }
     pub fn get_material(&self, name: &str) -> Handle<StandardMaterial> {
-        self.materials.get(name).cloned().unwrap_or_default()
+        self.materials.get(name).cloned().unwrap_or_else(|| self.material_white.clone())
     }
 }
 

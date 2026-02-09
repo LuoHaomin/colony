@@ -2,55 +2,46 @@
 
 pub fn task_system_sleep(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Brain, &Position), Without<Targeting>>,
-    mut query_bed: Query<(Entity, &Position, &Bed)>,
+    mut query: Query<(Entity, &mut Brain, &mut PhysicalBody, &Position, Option<&Pathing>, Option<&Targeting>)>,
+    bed_query: Query<(Entity, &Position), With<Bed>>,
 ) {
-    for (entity, mut brain, position) in query.iter_mut() {
-        if brain.task.is_none() {
-            continue; // Has no task.
-        }
-        let task = brain.task.unwrap();
-        if task != Task::Sleep { continue; }
-        // Get nearest bed.
-        // Set that as your target.
-        // Move towards.
-        let mut found_bed = false;
-        let mut shortest_distance = -1;
-        for (_, bed_position, _) in query_bed.iter() { // Future food nutrition & distance calculate.
-            let distance = position.distance(bed_position);
-            if shortest_distance == -1 || distance < shortest_distance {
-                shortest_distance = distance;
-            }
-        }
-        for (bed_entity, bed_position, _) in query_bed.iter_mut() { // Future food nutrition & distance calculate.
-            let distance = position.distance(bed_position);
-            if distance == shortest_distance {
-                // Set target.
-                commands.entity(entity).insert(Targeting { target: bed_entity });
-                commands.entity(entity).insert(Pathing { path: vec![], destination: *bed_position, ..default() });
-                found_bed = true;
+    for (entity, mut brain, mut physical_body, position, pathing, _targeting) in query.iter_mut() {
+        if pathing.is_some() { continue; }
+        if brain.task != Some(Task::Sleep) { continue; }
+
+        let mut in_bed = false;
+        for (_bed_entity, bed_position) in bed_query.iter() {
+            if position.distance(bed_position) <= 1 {
+                in_bed = true;
                 break;
             }
         }
-        if !found_bed {
-            brain.task = Some(Task::Sleeping);
-        }
-    }
-}
 
-pub fn task_system_sleeping(
-    _commands: Commands,
-    mut query: Query<(&mut Brain, &mut PhysicalBody)>
-) {
-    for (mut brain, mut physical_body) in query.iter_mut() {
-        if brain.task != Some(Task::Sleeping) { continue; }
-        if let Some(n) = &mut physical_body.needs_sleep {
-            n.current += 10.0;
-            if n.current >= n.max {
-                brain.motivation = None;
-                brain.task = None;
+        if in_bed {
+            if let Some(n) = physical_body.needs_sleep.as_mut() {
+                n.current += n.rate * 2.0;
+                if n.current >= n.max {
+                    n.current = n.max;
+                    brain.remotivate();
+                }
+            }
+            continue;
+        }
+
+        let mut closest_distance = -1;
+        let mut closest_position = None;
+        for (_bed_entity, bed_position) in bed_query.iter() {
+            let distance = position.distance(bed_position);
+            if closest_distance == -1 || distance < closest_distance {
+                closest_distance = distance;
+                closest_position = Some(bed_position);
             }
         }
+
+        if let Some(bed_pos) = closest_position {
+            commands.entity(entity).insert(Pathing { path: vec![], destination: *bed_pos });
+        } else {
+            brain.task = Some(Task::Sleeping); // Just sleep where you are
+        }
     }
 }
-

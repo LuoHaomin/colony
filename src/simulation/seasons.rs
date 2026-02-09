@@ -1,17 +1,14 @@
 ﻿use crate::prelude::*;
 
-// Create Plugin
 pub struct SeasonsPlugin;
 
 impl Plugin for SeasonsPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_systems(FixedUpdate,
+        app.add_systems(FixedUpdate,
             seasons_system
-            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(2.0)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(5.0)))
             .run_if(in_state(GameState::InGame))
-        )
-        ;
+        );
     }
 }
 
@@ -21,12 +18,9 @@ pub fn seasons_system(
 ) {
     for (entity, mut plant, mut transform, foragable, choppable) in plants.iter_mut() {
         if plant.growth < 1.0 {
-            let rand = rand::thread_rng().random_range(0..2);
-            let base_growth_speed = plant.plant_type.growth_speed();
-            plant.growth += match rand { 0 => 3.0 * base_growth_speed, 1 => base_growth_speed, _ => 0.0 };
-            transform.scale = Vec3::new(plant.growth, plant.growth, 1.0);
+            plant.growth += 0.05;
+            transform.scale = Vec3::splat(plant.growth);
             if plant.growth >= 0.5 {
-                // Is plant one that is typically edible?
                 if plant.plant_type.is_forageable().0.is_some() && foragable.is_none() {
                     commands.entity(entity).insert(Foragable);
                 }
@@ -34,17 +28,6 @@ pub fn seasons_system(
                     commands.entity(entity).insert(Choppable);
                 }
             }
-        } else {
-            plant.growth += 0.01;
-            if plant.growth > 1.01 {
-                let mut rng = rand::thread_rng();
-                let death = rng.random_range(0..100);
-                if death < 2 {
-                    //commands.entity(entity).despawn();
-                    plant.growth = 0.01;
-                }
-            }
         }
     }
 }
-

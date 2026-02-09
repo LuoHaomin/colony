@@ -7,7 +7,7 @@ pub struct StartupPlugin;
 
 impl Plugin for StartupPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_settlers, spawn_starting_stuff));
+        app.add_systems(OnEnter(GameState::InGame), (spawn_settlers, spawn_starting_stuff));
     }
 }
 
@@ -57,15 +57,17 @@ pub fn spawn_starting_stuff(
 
     // GENERATE PLANTS
     let mut taken_positions: HashMap<Position, u8> = HashMap::new();
+    let mut rng = rand::rng();
 
     for _ in 0..(MAP_WIDTH*MAP_LENGTH / 10) {
-        let mut rng = rand::rng();
         let x = rng.random_range(1..MAP_WIDTH-1);
         let y = rng.random_range(1..MAP_LENGTH-1);
         let growth = rng.random_range(0.1..1.0);
         let position = Position { x, y, z: 0 };
         if taken_positions.contains_key(&position) { continue; }
         taken_positions.insert(position, 1);
+        
+        if biome.plants.is_empty() { continue; }
         let plant_type = biome.plants[rng.random_range(0..biome.plants.len())];
 
         let plant = commands
@@ -95,13 +97,15 @@ pub fn spawn_starting_stuff(
     }
     
     // Spawn Objects (Items)
-    for _ in 0..(MAP_WIDTH*MAP_LENGTH / (biome.objects_overall_scarcity.max(1))) {
-        let mut rng = rand::rng();
-        let x = rng.random_range(1..MAP_WIDTH-1);
-        let y = rng.random_range(1..MAP_LENGTH-1);
+    let scarcity = biome.objects_overall_scarcity.max(1) as i32;
+    for _ in 0..(MAP_WIDTH*MAP_LENGTH / scarcity) {
+        let x = rng.random_range(1..MAP_WIDTH-1) as i32;
+        let y = rng.random_range(1..MAP_LENGTH-1) as i32;
         let position = Position { x, y, z: 0 };
         if taken_positions.contains_key(&position) { continue; }
         taken_positions.insert(position, 1);
+        
+        if biome.objects.is_empty() { continue; }
         let object_type = biome.objects[rng.random_range(0..biome.objects.len())];
 
         let object = commands

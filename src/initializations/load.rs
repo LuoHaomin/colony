@@ -1,24 +1,22 @@
-use crate::prelude::*;
+﻿use crate::prelude::*;
+use std::collections::HashMap;
 
 pub fn load_sprites(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    // Load the full spritesheet image
     let texture_handle: Handle<Image> = asset_server.load("AllSprites.png");
-    // Build a grid layout for the spritesheet (cell size 32x32, 64 columns, 95 rows)
     let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 64, 95, None, None);
     let layout_handle = texture_atlas_layouts.add(layout);
-    // Store both the image handle and the layout handle in the SpriteSheet resource
-    commands.insert_resource(SpriteSheet(texture_handle, layout_handle));
+    commands.insert_resource(SpriteSheet { handle: texture_handle, layout: layout_handle });
 }
 
 pub fn load_font(
     asset_server: Res<AssetServer>,
-    mut font_handle: ResMut<MyFont>,
+    mut commands: Commands,
 ) {
-    *font_handle = MyFont(asset_server.load("fonts/Helvetica.ttf"));
+    commands.insert_resource(MyFont(asset_server.load("fonts/FiraSans-Bold.ttf")));
 }
 
 pub fn load_mesh_assets(
@@ -27,6 +25,8 @@ pub fn load_mesh_assets(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.insert_resource(UniversalMeshAssets {
+        meshes: HashMap::new(),
+        materials: HashMap::new(),
         cube: meshes.add(Cuboid::from_size(Vec3::splat(TILE_SIZE))),
         sphere: meshes.add(Sphere::new(TILE_SIZE * 0.5)),
         plane: meshes.add(Plane3d::default().mesh().size(TILE_SIZE, TILE_SIZE)),
@@ -40,18 +40,7 @@ pub fn load_mesh_assets(
     });
 }
 
-pub fn load_sfx(
-    // mut commands: Commands,
-    // asset_server: Res<AssetServer>
-) {
-    // commands.spawn((
-    //     AudioBundle {
-    //         source: asset_server.load("RPG Sound Pack/battle/swing.wav"),
-    //         settings: PlaybackSettings::ONCE.paused().with_volume(bevy::audio::Volume::new_relative(0.5)),
-    //     },
-    //     SoundEffect,
-    // ));
-}
+pub fn load_sfx() {}
 
 #[derive(Component)]
 pub struct SoundEffect;

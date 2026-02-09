@@ -1,16 +1,14 @@
 ﻿use crate::prelude::*;
 
-// Make plugin.
 pub struct NeedsPlugin;
 
 impl Plugin for NeedsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate,
             needs_status_system
-            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(2.0)))
+            .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(1.0)))
             .run_if(in_state(GameState::InGame))
-        )
-        ;
+        );
     }
 }
 
@@ -41,4 +39,3 @@ pub fn needs_status_system(
 
 #[derive(Message)]
 pub struct FoodNotifEvent;
-

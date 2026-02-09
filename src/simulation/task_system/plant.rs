@@ -1,19 +1,10 @@
 ﻿use crate::prelude::*;
 
-pub struct TaskPluginZone;
-
-impl Plugin for TaskPluginZone {
-    fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, task_system_zone.run_if(in_state(GameState::InGame)));
-    }
-}
-
 pub fn task_system_zone(
     mut commands: Commands,
     mut entities_that_might_plant: Query<(Entity, &mut Brain, &Position, Option<&Pathing>, Option<&Targeting>)>,
     targetables: Query<(Entity, &Position, &Zone)>,
     obstacles: Query<(Entity, &Position), Without<MapTile>>,
-    _sprite_sheet: Res<SpriteSheet>,
     mesh_assets: Res<UniversalMeshAssets>,
 ) {
     let mut already_targeted = super::set_already_targetted(&entities_that_might_plant);
@@ -31,7 +22,6 @@ pub fn task_system_zone(
             if distance <= 1 && targeting.is_some() && targeting.unwrap().target == targetable_entity {
                 if brain.task == Some(Task::Plant) {
                     spawn_item(&mut commands, targetable_position, &mesh_assets, zone);
-                    commands.entity(entity).insert(Targeting { target: targetable_entity });
                     commands.entity(entity).remove::<Targeting>();
                     continue 'brains;
                 }
@@ -56,9 +46,7 @@ pub fn task_system_zone(
         if let Some(nearest) = nearest_entity {
             already_targeted.push(nearest.entity);
             commands.entity(entity).insert(Targeting { target: nearest.entity });
-            let mut brain_task = brain.task.unwrap();
-            brain_task = brain_task.get_steps();
-            brain.task = Some(brain_task);
+            commands.entity(entity).insert(Pathing { path: vec![], destination: nearest.position });
         }
     }
 }
@@ -67,23 +55,23 @@ fn spawn_item(
     commands: &mut Commands,
     position: &Position,
     mesh_assets: &UniversalMeshAssets,
-    zone: &Zone,
+    _zone: &Zone,
 ) {
     commands.spawn((
         Mesh3d(mesh_assets.cube.clone()),
-        MeshMaterial3d(mesh_assets.material_white.clone()),
+        MeshMaterial3d(mesh_assets.material_green.clone()),
         Transform::from_xyz(position.x as f32 * TILE_SIZE, position.y as f32 * TILE_SIZE, TILE_SIZE * 0.1),
     ))
     .insert(*position)
-    .insert(Plant { growth: 0.4, plant_type: zone.item_type })
-    .insert( Object { itemtype: zone.item_type, ..default() } );
+    .insert(Plant { growth: 0.4, plant_type: ItemType::Cabbage })
+    .insert(Object { itemtype: ItemType::Cabbage, ..default() });
 }
 
 fn spawn_building(
     commands: &mut Commands,
     position: &Position,
     mesh_assets: &UniversalMeshAssets,
-    zone: &Zone,
+    _zone: &Zone,
 ) {
     commands.spawn((
         Mesh3d(mesh_assets.cube.clone()),
@@ -91,6 +79,5 @@ fn spawn_building(
         Transform::from_xyz(position.x as f32 * TILE_SIZE, position.y as f32 * TILE_SIZE, TILE_SIZE * 0.1),
     ))
     .insert(*position)
-    .insert(Object { itemtype: zone.item_type, under_construction: false, ..default() });
+    .insert(Object { itemtype: ItemType::WallWood, under_construction: false, ..default() });
 }
-
