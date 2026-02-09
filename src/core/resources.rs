@@ -76,6 +76,11 @@ pub struct GameSpeed {
     pub speed: f32,
 }
 
+#[derive(Resource, Default)]
+pub struct CurrentDisplayZ {
+    pub z: i32,
+}
+
 #[derive(Resource, Default, Debug)]
 pub struct Biome {
     pub name: String,

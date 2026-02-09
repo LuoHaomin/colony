@@ -12,54 +12,53 @@ pub fn generate_map(
     mut commands: Commands,
     biome: Res<Biome>,
     mut tiletypes: ResMut<TileHash>,
-    mesh_assets: Res<UniversalMeshAssets>,
+    sprite_sheet: Res<SpriteSheet>,
 ) {
-    let wall_mesh = mesh_assets.cube.clone();
-    let wall_material = mesh_assets.material_white.clone();
-    let floor_mesh = mesh_assets.plane.clone();
-    let floor_material = mesh_assets.material_green.clone();
-
     for x in 0..MAP_WIDTH {
         for y in 0..MAP_LENGTH {
-            let tyle_type = if x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_LENGTH - 1 {
-                TileType::WallGame
-            } else {
-                biome.tiles.choose(&mut rand::thread_rng()).unwrap_or(&TileType::Grass).clone()
-            };
+            // Simple hill generation
+            let hill_height = ((x as f32 * 0.1).sin() * (y as f32 * 0.1).cos() * 2.0).round() as i32;
+            
+            for z in -3..3 {
+                let is_border = x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_LENGTH - 1;
+                
+                let tyle_type = if is_border {
+                    if z <= hill_height { TileType::WallGame } else { TileType::Void }
+                } else {
+                    if z < hill_height {
+                        TileType::Dirt
+                    } else if z == hill_height {
+                        biome.tiles.choose(&mut rand::rng()).unwrap_or(&TileType::Grass).clone()
+                    } else {
+                        TileType::Void
+                    }
+                };
 
-            let is_wall = tyle_type.is_wall();
-            let mut transform = position_to_translation(x, y, 0);
-
-            let entity = commands.spawn((
-                MapTile,
-                Position { x, y, z: 0 },
-                tyle_type.clone(),
-                SizeXYZ::flat(TILE_SIZE),
-            )).id();
-
-            if is_wall {
-                commands.entity(entity).insert((
-                    Mesh3d(wall_mesh.clone()),
-                    MeshMaterial3d(wall_material.clone()),
-                    transform,
+                if tyle_type == TileType::Void { continue; }
+                
+                let (tx, ty) = tyle_type.get_texture_coords();
+                let position = Position { x, y, z };
+                
+                commands.spawn((
+                    MapTile,
+                    position,
+                    tyle_type.clone(),
+                    SizeXYZ::flat(TILE_SIZE),
+                    Sprite {
+                        image: sprite_sheet.handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: sprite_sheet.layout.clone(),
+                            index: (tx + ty * 64) as usize,
+                        }),
+                        ..default()
+                    },
+                    position.to_transform(),
+                    Visibility::default(),
                 ));
-            } else {
-                // Plane is horizontal by default, we want it on z=0 facing up (y+) or facing camera (z+)
-                // In Bevy 3D, z=0 is a vertical plane. XY is the screen.
-                // Our units move on XY plane. So z=0 floor should be fine?
-                // Actually, Bevy standard is XZ floor, Y up.
-                // But our legacy code uses (x, y) for 2D. 
-                // Let's keep (x, y) on a plane and z as height.
-                // So floor is a plane on z=0.
-                transform.rotation = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);
-                commands.entity(entity).insert((
-                    Mesh3d(floor_mesh.clone()),
-                    MeshMaterial3d(floor_material.clone()),
-                    transform,
-                ));
+
+                tiletypes.hash.insert(position, tyle_type);
             }
-
-            tiletypes.hash.insert( Position { x, y, z: 0 }, tyle_type);
         }
     }
 }
+

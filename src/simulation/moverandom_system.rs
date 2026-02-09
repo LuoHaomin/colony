@@ -2,12 +2,11 @@
 
 pub fn movement_random(
     mut entities: Query<(&mut Position, &mut Transform), (With <MoveRandom>, Without<TileType>)>,
-    tile_types: Query<(&Position, &TileType)>,
+    tile_types: Res<TileHash>,
 ) {
-    //let mut head_position = Position { x: 0, y: 0, z: 0 };
     for (mut position, mut transform) in entities.iter_mut() {
         let mut new_position = *position;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let dir = rng.random_range(0..4);
         match dir {
             0 => new_position.y += 1,
@@ -16,16 +15,13 @@ pub fn movement_random(
             3 => new_position.x += 1,
             _ => {}
         }
-        for (tile_position, tile_type) in tile_types.iter() {
-            let mut p2 = new_position;
-            p2.z = 0;
-            if *tile_position == p2 && !tile_type.is_wall() {
+        
+        if let Some(tile_type) = tile_types.hash.get(&new_position) {
+            if !tile_type.is_wall() {
                 *position = new_position;
-                transform.translation.x = new_position.x as f32 * TILE_SIZE;
-                transform.translation.y = new_position.y as f32 * TILE_SIZE;
+                *transform = position.to_transform();
             }
         }
-        //*position = new_position;
     }
 }
 

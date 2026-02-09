@@ -5,6 +5,7 @@ pub mod text_system;
 pub mod names_system;
 pub mod selection_systems;
 pub mod camera_system;
+pub mod visibility_system;
 
 pub use interface::*;
 pub use button_system::*;

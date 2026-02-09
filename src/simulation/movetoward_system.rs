@@ -198,10 +198,10 @@ fn generate_path(
             return nodelist;
         }
         let mut neighbors: Vec<Position> = vec![];
-        neighbors.push(Position { x: current_position.x + 1, y: current_position.y, z: 0 });
-        neighbors.push(Position { x: current_position.x - 1, y: current_position.y, z: 0 });
-        neighbors.push(Position { x: current_position.x, y: current_position.y + 1, z: 0 });
-        neighbors.push(Position { x: current_position.x, y: current_position.y - 1, z: 0 });
+        neighbors.push(Position { x: current_position.x + 1, y: current_position.y, z: current_position.z });
+        neighbors.push(Position { x: current_position.x - 1, y: current_position.y, z: current_position.z });
+        neighbors.push(Position { x: current_position.x, y: current_position.y + 1, z: current_position.z });
+        neighbors.push(Position { x: current_position.x, y: current_position.y - 1, z: current_position.z });
 
         for neighbor in neighbors {
             if tiletypes.get(&neighbor).is_none() { continue; }

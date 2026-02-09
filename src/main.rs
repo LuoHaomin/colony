@@ -15,6 +15,7 @@ use crate::rendering::camera_system::CameraPlugin;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .insert_resource(CurrentDisplayZ { z: 0 })
         .add_plugins((
              initializations::biome::BiomePlugin,
              initializations::startup::StartupPlugin,
@@ -33,6 +34,7 @@ fn main() {
         .init_resource::<TileHash>()
         .init_resource::<Dragging>()
         .init_resource::<GameSpeed>()
+        .init_resource::<CurrentDisplayZ>()
         .init_resource::<UniversalMeshAssets>()
         .init_resource::<SpriteSheet>()
         .init_resource::<MyFont>()
@@ -63,7 +65,8 @@ fn main() {
             simulation::task_system::TaskPlugin,
             simulation::combat_system::CombatPlugin,
             simulation::spoilage_system::SpoilagePlugin,
-            rendering::interface::ClickPlugin
+            rendering::interface::ClickPlugin,
+            rendering::visibility_system::VisibilityPlugin
         ))
         .add_systems(
             FixedUpdate, (
@@ -81,6 +84,7 @@ fn main() {
                     .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5))),
                 rendering::text_system::text_system,
                 rendering::names_system::names_system,
+                rendering::names_system::update_unit_status_text,
                 rendering::text_system::text_update_system,
                 rendering::interface::scrollwheel_input,
             ).run_if(in_state(GameState::InGame))
@@ -91,18 +95,8 @@ fn main() {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(TILE_SIZE * 19.0, TILE_SIZE * 11.0, 500.0)
-            .looking_at(Vec3::new(TILE_SIZE * 19.0, TILE_SIZE * 11.0, 0.0), Vec3::Y),
-    ));
-    
-    commands.spawn((
-        DirectionalLight {
-            illuminance: 5000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Camera2d::default(),
+        Transform::from_xyz(TILE_SIZE * 19.0, TILE_SIZE * 11.0, 100.0),
     ));
 }
 

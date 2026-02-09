@@ -6,6 +6,7 @@ pub fn keyboard_input(
     mut camera: Query<&mut Transform, With<Camera>>,
     gamestate: Res<State<GameState>>,
     mut nextstate: ResMut<NextState<GameState>>,
+    mut current_z: ResMut<CurrentDisplayZ>,
 ) {
     if input.just_pressed(KeyCode::Space) {
         // Pause or Unpause.
@@ -21,6 +22,14 @@ pub fn keyboard_input(
             }
         }
     }
+
+    if input.just_pressed(KeyCode::Comma) || input.just_pressed(KeyCode::KeyQ) {
+        current_z.z = (current_z.z + 1).clamp(-3, 2);
+    }
+    if input.just_pressed(KeyCode::Period) || input.just_pressed(KeyCode::KeyE) {
+        current_z.z = (current_z.z - 1).clamp(-3, 2);
+    }
+
     for mut transform in camera.iter_mut() {
         let move_speed = 16.0;
         //transform.translation.x += 5.0;

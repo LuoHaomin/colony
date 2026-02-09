@@ -10,21 +10,20 @@ impl Plugin for UnitGeneratorPlugin {
 pub fn spawn_unit_from_template(
     commands: &mut Commands,
     position: Position,
-    _sprite_sheet: &Res<SpriteSheet>,
+    sprite_sheet: &Res<SpriteSheet>,
     template: &UnitTemplate,
-    meshes: &UniversalMeshAssets,
+    _meshes: &UniversalMeshAssets,
 ) -> Entity {
-    let mesh = meshes.capsule.clone();
-    let material = match template.actor_type {
-        ActorType::Spider | ActorType::Rat | ActorType::Cyclops => meshes.material_red.clone(),
-        ActorType::Man | ActorType::Woman | ActorType::Elf | ActorType::Dwarf => meshes.material_blue.clone(),
-        _ => meshes.material_white.clone(),
-    };
-
     let entity = commands
         .spawn((
-            Mesh3d(mesh),
-            MeshMaterial3d(material),
+            Sprite {
+                image: sprite_sheet.handle.clone(),
+                texture_atlas: Some(TextureAtlas {
+                    layout: sprite_sheet.layout.clone(),
+                    index: template.actor_type.sprite_index(),
+                }),
+                ..default()
+            },
             position.to_transform(),
         ))
         .insert(position)

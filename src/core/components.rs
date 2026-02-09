@@ -48,7 +48,12 @@ impl Position {
         (((self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2)) as f32).sqrt() as i32
     }
     pub fn to_transform(&self) -> Transform {
-        Transform::from_xyz(self.x as f32 * TILE_SIZE, self.z as f32 * TILE_SIZE, self.y as f32 * TILE_SIZE)
+        // We use X, Y for the plane and Z for the layer depth.
+        // In Bevy's default 2D/3D setup, usually (x, y) is the plane.
+        // To make it look like Dwarf Fortress, we keep x, y as coordinates and 
+        // use a small Z offset for actual rendering order if needed, 
+        // but here Z is the layer depth.
+        Transform::from_xyz(self.x as f32 * TILE_SIZE, self.y as f32 * TILE_SIZE, self.z as f32 * 0.1)
     }
     pub fn to_transform_layer(&self, layer: f32) -> Transform {
         Transform::from_xyz(self.x as f32 * TILE_SIZE, layer, self.y as f32 * TILE_SIZE)
@@ -61,12 +66,22 @@ pub fn position_to_translation(x: i32, y: i32, z: i32) -> Transform {
 
 #[derive(Component, Debug, Clone, PartialEq)]
 pub enum TileType {
-    Grass, Dirt, Water, Wall, WallGame, Gravel
+    Grass, Dirt, Water, Wall, WallGame, Gravel, Void
 }
 
 impl TileType {
     pub fn is_wall(&self) -> bool {
         matches!(self, TileType::Wall | TileType::WallGame)
+    }
+    pub fn get_texture_coords(&self) -> (u32, u32) {
+        match self {
+            TileType::Grass => (0, 0),
+            TileType::Dirt => (1, 0),
+            TileType::Water => (2, 0),
+            TileType::Wall | TileType::WallGame => (3, 0),
+            TileType::Gravel => (4, 0),
+            TileType::Void => (0, 0),
+        }
     }
 }
 
@@ -245,6 +260,22 @@ pub enum ForageType {
 #[derive(Component, Debug, Clone, Copy, PartialEq)]
 pub enum ActorType {
     Man, Woman, Elf, Dwarf, Spider, Rat, Cyclops, Monster, Crab
+}
+
+impl ActorType {
+    pub fn sprite_index(&self) -> usize {
+        match self {
+            ActorType::Man => 31 + 0 * 64,
+            ActorType::Woman => 31 + 1 * 64,
+            ActorType::Elf => 31 + 2 * 64,
+            ActorType::Dwarf => 31 + 3 * 64,
+            ActorType::Spider => 28 + 5 * 64,
+            ActorType::Rat => 28 + 6 * 64,
+            ActorType::Cyclops => 28 + 7 * 64,
+            ActorType::Monster => 28 + 8 * 64,
+            ActorType::Crab => 28 + 9 * 64,
+        }
+    }
 }
 
 #[derive(Component, Clone, PartialEq, Debug, Default)]
