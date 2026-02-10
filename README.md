@@ -1,51 +1,59 @@
-# COLONY
+# Colony - 3D Autonomous Idle Simulator
 
-COLONY is a Rust game, built with Bevy, that plays like any other colony simulator game. The current version is very basic, there are basic food items that your units can consume, your units have basic stats like hunger, and there is some basic map generation.
+Colony 是一款基于 Bevy 0.18 开发的“矮人要塞”风格 2D/3D 混合架构挂机模拟游戏。
 
-What are the various systems?
-* "Seasons" represents the movement of time, and causes plants to grow and die.
-* "Movetoward" is an A* algorithm that lets objects move in the most direct path, avoiding obstacles along the way.
-* Spacebar will pause the game
-* Escape will close the game
-* Some of the menus don't work yet, but you can farm cabbages and trees, and a unit will go plant these
-* Now you can build walls
-* Crafting is not yet implemented
-* There is a monster spawner
-* You can give Orders > Chop to chop down trees
-* Units automatically sleep when they're tired.
+## 核心特性
 
-![Screenshot](./assets/screenshot.png)
+- **Z-Level 分层世界**: 真正的三维坐标系，支持多层地形显示与切换。
+- **深度视觉效果**: 观察视角上方的层自动隐藏，下方的层产生阴影暗淡效果。
+- **完全自主的 AI**: 单位根据饥饿、睡眠、娱乐等动机自主决策，不再需要频繁手动干预。
+- **现代化 Bevy 引擎**: 迁移至 Bevy 0.18，利用高性能 ECS 驱动大量实体的自主行为。
 
-## Things Needed For Alpha Release
+## 快速开始
 
-1. Improve the UI box when you click one of your units, displaying their personality, attributes, and health
-2. (Easy) Implementing more variety in already-implemented systems: foods, trees, and plants.
-3. Biomes should exist in patches across a larger map. Biomes could also represent areas, like a graveyard type area could be a "Biome".
-4. Implement construction skills.
-5. Add more kinds of objects
-6. Better organize tileset file.
-7. Implement weapons/equipment/inventory.
-8. Giving orders to units.
-9. Implement the effects of more personality traits.
+### 运行环境
+- Rust (最新稳定版)
+- 支持 Vulkan/Metal/DX12 的显卡驱动
 
-## Getting Started
+### 启动命令
+```bash
+cargo run --release
+```
 
-Generally ```cargo build``` and then ```cargo run``` works fine on Windows 11 and Ubuntu.
+## 操作指南
 
-## Contributing
+- **Z轴切换 (高度观察)**:
+    - `Q` 或 `,` (逗号): 升高观察面
+    - `E` 或 `.` (句号): 降低观察面
+- **游戏控制**:
+    - `空格 (Space)`: 暂停/恢复模拟
+    - `Esc`: 退出游戏
+- **观察**:
+    - 你可以观察单位头顶的文字，实时了解其当前状态（如 `[Eat]`, `[Sleep]`, `[Thinking...]`）。
 
-Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute to this project.
+## 项目结构 (开发者指南)
 
-## License
+### 文档
+更详细的系统设计请参考 `docs/docs/` 目录：
+- `vision.md`: 核心设计愿景
+- `architecture.md`: 技术细节与坐标映射逻辑
+- `rendering.md`: 2D-in-3D 渲染与可见性系统
+- `simulation.md`: 需求、动机与任务决策循环
+- `world.md`: 地形生成算法
 
-This project is licensed dually under the MIT License and Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+### 核心模块
+- `src/main.rs`: 插件注册与系统调度中心。
+- `src/core/components.rs`: `Position`, `Brain`, `PhysicalBody` 等核心数据定义。
+- `src/rendering/visibility_system.rs`: Z-Level 切片效果的实现核心。
+- `src/simulation/thinking_system.rs`: 决策逻辑的“大脑”。
 
-## Art
+## 未来规划 (TODO)
+1. **多层寻路**: 允许单位通过斜坡或梯子在 Z 轴间移动。
+2. **建筑系统**: 支持玩家在不同高度建设多层建筑。
+3. **更丰富的 UI**: 增强侧边栏信息显示，点击单位查看详细属性。
+4. **资源保存与加载**: 序列化 `TileHash` 与实体状态。
 
-The art may fall under different licensing conditions. Please see the specific licenses regarding any artwork.
+## 许可
+本项目采用 MIT / Apache 2.0 双重许可。
+贴图资源来自 [Dungeon Crawl](https://opengameart.org/content/dungeon-crawl-32x32-tiles) (CC-0)。
 
-Main tailset is from https://opengameart.org/content/dungeon-crawl-32x32-tiles and it is shown as CC-0.
-
-## Contribution License
-
-By contributing to this project, you agree to license your contributions under the terms of the MIT license and the Apache 2.0 license. Additionally, you grant the project owner, Ryan Kopf, an unlimited, irrevocable, perpetual, universe-wide license to use your contributions for any purpose, including but not limited to commercial purposes, without any additional restrictions or obligations.
