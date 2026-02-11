@@ -32,6 +32,7 @@ fn main() {
         .insert_resource(SelectedObjectInformation::default())
         .insert_resource(InfoPanelInformation::default())
         .init_resource::<TileHash>()
+        .init_resource::<TileEnvHash>()
         .init_resource::<Dragging>()
         .init_resource::<GameSpeed>()
         .init_resource::<CurrentDisplayZ>()
@@ -60,10 +61,13 @@ fn main() {
             simulation::seasons::SeasonsPlugin,
             simulation::needs::NeedsPlugin,
             rendering::interface::GameUiPlugin,
+        ))
+        .add_plugins((
             rendering::interface::InfoPanelPlugin,
             simulation::thinking_system::ThinkingPlugin,
             simulation::task_system::TaskPlugin,
             simulation::combat_system::CombatPlugin,
+            simulation::reproduction_system::ReproductionPlugin,
             simulation::spoilage_system::SpoilagePlugin,
             rendering::interface::ClickPlugin,
             rendering::visibility_system::VisibilityPlugin

@@ -85,6 +85,13 @@ impl TileType {
     }
 }
 
+#[derive(Component, Debug, Clone, Default)]
+pub struct EnvironmentalData {
+    pub temperature: f32,
+    pub humidity: f32,
+    pub fertility: f32,
+}
+
 #[derive(Component)]
 pub struct MapTile;
 
@@ -104,6 +111,50 @@ impl SizeXYZ {
     }
 }
 
+#[derive(Component, Debug, Clone, Default)]
+pub struct MaterialProperties {
+    pub mass: f32,
+    pub hardness: f32,
+    pub energy_density: f32,
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct Genome {
+    // Physical
+    pub size: f32,
+    pub mobility: f32,
+    pub sensory_range: f32,
+    // Metabolic
+    pub metabolic_efficiency: f32,
+    pub diet_type: f32, // 0.0=photosynthetic, 1.0=carnivorous
+    // Behavioral
+    pub aggression: f32,
+    pub sociality: f32,
+    pub mutation_rate: f32,
+}
+
+impl Genome {
+    pub fn genetic_distance(&self, other: &Genome) -> f32 {
+        let d = (self.size - other.size).powi(2) +
+                (self.mobility - other.mobility).powi(2) +
+                (self.metabolic_efficiency - other.metabolic_efficiency).powi(2) +
+                (self.diet_type - other.diet_type).powi(2) +
+                (self.aggression - other.aggression).powi(2);
+        d.sqrt()
+    }
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct Generation {
+    pub value: u32,
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct ReproductionStatus {
+    pub energy_threshold: f32,
+    pub last_reproduction_tick: u64,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Need {
     pub current: f32,
@@ -116,6 +167,8 @@ pub struct Need {
 
 #[derive(Component, Default, Clone)]
 pub struct PhysicalBody {
+    pub energy_storage: f32,
+    pub energy_max: f32,
     pub needs_food: Option<Need>,
     pub needs_sleep: Option<Need>,
     pub needs_entertainment: Option<Need>,

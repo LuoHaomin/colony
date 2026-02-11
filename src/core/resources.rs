@@ -7,6 +7,11 @@ pub struct TileHash {
 }
 
 #[derive(Resource, Default)]
+pub struct TileEnvHash {
+    pub hash: HashMap<Position, EnvironmentalData>,
+}
+
+#[derive(Resource, Default)]
 pub struct SpriteSheet {
     pub handle: Handle<Image>,
     pub layout: Handle<TextureAtlasLayout>,

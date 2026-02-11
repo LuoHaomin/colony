@@ -63,18 +63,42 @@ pub fn update_inspector(
 
 pub fn info_system(
     mut commands: Commands,
-    mut people: Query<(Entity, &Position, &Brain, &PhysicalBody, Option<&HasName>), With<ClickedOn>>,
+    mut clickable: Query<(Entity, &Position, Option<&PhysicalBody>, Option<&Brain>, Option<&HasName>, Option<&Genome>, Option<&Generation>, Option<&EnvironmentalData>), With<ClickedOn>>,
     mut info_panel: ResMut<InfoPanelInformation>,
 ) {
-    if let Some((_entity, position, brain, physical_body, has_name)) = people.iter_mut().last() {
-        info_panel.name = has_name.map(|h| h.name.clone()).unwrap_or_else(|| "Something".to_string());
+    if let Some((_entity, position, physical_body, brain, has_name, genome, generation, env_data)) = clickable.iter_mut().last() {
+        info_panel.name = has_name.map(|h| h.name.clone()).unwrap_or_else(|| "Object".to_string());
         info_panel.info = vec![format!("Grid Pos: [{}, {}, {}]", position.x, position.y, position.z)];
-        info_panel.info.extend(physical_body.info_panel_needs());
-        info_panel.info.extend(brain.info_panel());
+        
+        if let Some(pb) = physical_body {
+            info_panel.info.extend(pb.info_panel_needs());
+        }
+        
+        if let Some(b) = brain {
+            info_panel.info.extend(b.info_panel());
+        }
+
+        if let Some(gen) = generation {
+             info_panel.info.push(format!("Generation: {}", gen.value));
+        }
+
+        if let Some(g) = genome {
+            info_panel.info.push(format!("-- Genome --"));
+            info_panel.info.push(format!("Size: {:.2}", g.size));
+            info_panel.info.push(format!("Mobility: {:.2}", g.mobility));
+            info_panel.info.push(format!("Metab-Eff: {:.2}", g.metabolic_efficiency));
+            info_panel.info.push(format!("Diet: {:.1} (0=Plant, 1=Meat)", g.diet_type));
+        }
+
+        if let Some(env) = env_data {
+            info_panel.info.push(format!("-- Environment --"));
+            info_panel.info.push(format!("Temp: {:.1} C", env.temperature));
+            info_panel.info.push(format!("Fertility: {:.1}%", env.fertility * 100.0));
+        }
     }
     
     // Simple logic to keep only one clicked element
-    let entities: Vec<Entity> = people.iter().map(|(e, ..)| e).collect();
+    let entities: Vec<Entity> = clickable.iter().map(|(e, ..)| e).collect();
     if entities.len() > 1 {
         for e in &entities[0..entities.len()-1] {
             commands.entity(*e).remove::<ClickedOn>();

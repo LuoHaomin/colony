@@ -2,15 +2,15 @@ use crate::prelude::*;
 
 pub fn combat_system_melee(
     mut commands: Commands,
-    mut entities_that_might_fight: Query<(Entity, &mut Brain, &mut PhysicalBody, &Position, Option<&mut Pathing>, Option<&Targeting>)>,
-    attackables: Query<(Entity, &Position), With<Brain>>,
+    mut entities_that_might_fight: Query<(Entity, &mut Brain, &mut PhysicalBody, &Position, Option<&mut Pathing>, Option<&Targeting>, Option<&Genome>)>,
+    attackables: Query<(Entity, &Position, Option<&Genome>), With<Brain>>,
     sprite_sheet: Res<SpriteSheet>,
 ) {
-    for (e, mut brain, mut physical_body, position, pathing, targeting) in entities_that_might_fight.iter_mut() {
-        if brain.task != Some(Task::Fight) { continue; }
+    for (e, mut brain, mut physical_body, position, pathing, targeting, genome) in entities_that_might_fight.iter_mut() {
+        if brain.task != Some(Task::Fight) && brain.task != Some(Task::Hunt) { continue; }
         if let Some(targeting) = targeting {
             let mut entity_found = false;
-            for (entity, target_position) in attackables.iter() {
+            for (entity, target_position, _target_genome) in attackables.iter() {
                 if entity == targeting.target {
                     entity_found = true;
                     if position.distance(target_position) <= 1 {
@@ -54,7 +54,7 @@ pub fn combat_system_melee(
                     if let Some(danger_source) = danger.danger_source {
                         // check if attackables contains danger_source
                         let mut danger_source_found = false;
-                        for (entity, _target_position) in attackables.iter() {
+                        for (entity, _target_position, _target_genome) in attackables.iter() {
                             if entity == danger_source {
                                 danger_source_found = true;
                                 break;
@@ -74,9 +74,23 @@ pub fn combat_system_melee(
             let mut closest_distance = 9999;
             let mut closest_target = None;
             let mut closest_position = None;
-            for (attackable, attackable_position) in attackables.iter() {
+            
+            let sensory_range = genome.map(|g| g.sensory_range).unwrap_or(15.0) as i32;
+
+            for (attackable, attackable_position, target_genome) in attackables.iter() {
                 if attackable == e { continue; }
+                
                 let distance = position.distance(attackable_position);
+                if distance > sensory_range { continue; }
+
+                // Hunting logic vs Fighting logic
+                if brain.task == Some(Task::Hunt) {
+                    if let (Some(g1), Some(g2)) = (genome, target_genome) {
+                        // Don't hunt things that are genetically too close (same species)
+                        if g1.genetic_distance(g2) < 0.2 { continue; }
+                    }
+                }
+
                 if distance < closest_distance {
                     closest_distance = distance;
                     closest_target = Some(attackable);
@@ -99,56 +113,60 @@ fn do_melee_damage(
     commands: &mut Commands,
     attacker_entity: Option<Entity>,
     attacked_entity: Entity,
-    body1: &PhysicalBody,
+    attacker_body: &mut PhysicalBody,
+    attacker_genome: Option<&Genome>,
     body2: &mut PhysicalBody,
     _asset_server: &Res<AssetServer>
 ) {
     let damage =
         1 +
-        (body1.attributes.strength - body2.attributes.constitution).max(0).min(20) +
-        (body1.skillset.brawling.level()).max(0).min(20)
+        (attacker_body.attributes.strength - body2.attributes.constitution).max(0).min(20) +
+        (attacker_body.skillset.brawling.level()).max(0).min(20)
         ;
     body2.attributes.health -= damage;
     if body2.attributes.health <= 0 {
+        // Predation energy gain
+        if let Some(genome) = attacker_genome {
+            // Carnivores gain energy from kills
+            let energy_gain = (body2.energy_max * 0.5 + body2.energy_storage) * genome.diet_type;
+            attacker_body.energy_storage = (attacker_body.energy_storage + energy_gain).min(attacker_body.energy_max);
+            info!("Predator {:?} consumed target for {} energy", attacker_entity, energy_gain);
+        }
+
         commands.entity(attacked_entity).despawn();
     }
     body2.danger = Some(Danger {
         danger_type: DangerType::Attacked,
         danger_source: attacker_entity,
     });
-
-    // Play a sound effect.
-    // commands.spawn((
-    //     AudioBundle {
-    //         source: asset_server.load("RPG Sound Pack/battle/swing.wav"),
-    //         settings: PlaybackSettings::ONCE.with_volume(bevy::audio::Volume::new_relative(0.1)),
-    //     },
-    //     SoundEffect,
-    // ));
 }
+
 pub fn attacked_entities_system(
     mut commands: Commands,
     attacked_query: Query<(Entity, &Attacked), With<Attacked>>,
-    mut physical_bodies: Query<(Entity, &mut PhysicalBody)>,
+    mut physical_bodies: Query<(Entity, &mut PhysicalBody, Option<&Genome>)>,
     asset_server: Res<AssetServer>
 ) {
     for (attacked_entity, attack_info) in attacked_query.iter() {
         commands.entity(attacked_entity).remove::<Attacked>();
-        let mut attacker_physical_body: Option<PhysicalBody> = None;
-        let mut attacker_entity = None;
-        // Get the stats of the attacker.
-        for (entity, physical_body) in physical_bodies.iter_mut() {
+        
+        // Use unsafe split or two-pass to get both bodies
+        let mut attacker_data: Option<(Entity, PhysicalBody, Option<Genome>)> = None;
+        for (entity, body, genome) in physical_bodies.iter() {
             if entity == attack_info.attacker {
-                attacker_physical_body = Some(physical_body.clone());
-                attacker_entity = Some(entity);
+                attacker_data = Some((entity, body.clone(), genome.cloned()));
+                break;
             }
         }
-        if attacker_physical_body.is_none() { continue; }
-        let attacker_physical_body = attacker_physical_body.unwrap();
-        // Now do the damage to the attacked body.
-        for (entity, mut physical_body) in physical_bodies.iter_mut() {
-            if entity == attacked_entity {
-                do_melee_damage(&mut commands, attacker_entity, attacked_entity, &attacker_physical_body, &mut physical_body, &asset_server);
+
+        if let Some((a_entity, mut a_body, a_genome)) = attacker_data {
+            if let Ok((_v_entity, mut v_body, _v_genome)) = physical_bodies.get_mut(attacked_entity) {
+                do_melee_damage(&mut commands, Some(a_entity), attacked_entity, &mut a_body, a_genome.as_ref(), &mut v_body, &asset_server);
+                
+                // Write back attacker body changes (energy gain)
+                if let Ok((_, mut entry_body, _)) = physical_bodies.get_mut(a_entity) {
+                    *entry_body = a_body;
+                }
             }
         }
     }
