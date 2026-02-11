@@ -129,7 +129,19 @@ pub struct PhysicalBody {
 }
 
 impl PhysicalBody {
-    pub fn info_panel_needs(&self) -> Vec<String> { vec![] }
+    pub fn info_panel_needs(&self) -> Vec<String> {
+        let mut info = Vec::new();
+        if let Some(need) = &self.needs_food {
+            info.push(format!("Hunger: {:.0}%", (1.0 - need.current / need.max) * 100.0));
+        }
+        if let Some(need) = &self.needs_sleep {
+            info.push(format!("Energy: {:.0}%", (need.current / need.max) * 100.0));
+        }
+        if let Some(need) = &self.needs_entertainment {
+            info.push(format!("Boredom: {:.0}%", (1.0 - need.current / need.max) * 100.0));
+        }
+        info
+    }
     pub fn info_panel_attributes(&self) -> Vec<String> { vec![] }
     pub fn info_panel_skills(&self) -> Vec<String> { vec![] }
 }
@@ -186,6 +198,7 @@ pub struct Attributeset {
 #[derive(Component, Default)]
 pub struct Brain {
     pub task: Option<Task>,
+    pub task_queue: Vec<Task>, // Add task queue
     pub personality: Vec<PersonalityTrait>,
     pub memory: Vec<Memory>,
     pub motivation: Option<Motivation>,
@@ -193,9 +206,22 @@ pub struct Brain {
 }
 
 impl Brain {
-    pub fn info_panel(&self) -> Vec<String> { vec![] }
+    pub fn info_panel(&self) -> Vec<String> {
+        let mut info = Vec::new();
+        if let Some(task) = self.task {
+            info.push(format!("Task: {:?}", task));
+        }
+        if !self.task_queue.is_empty() {
+            info.push(format!("Queue: {} tasks", self.task_queue.len()));
+        }
+        if let Some(motivation) = self.motivation {
+            info.push(format!("Motivation: {:?}", motivation));
+        }
+        info
+    }
     pub fn remotivate(&mut self) {
         self.task = None;
+        self.task_queue.clear();
         self.motivation = None;
     }
     pub fn get_next_personality_trait(&self) -> Option<PersonalityTrait> { None }
@@ -278,7 +304,7 @@ impl ActorType {
     }
 }
 
-#[derive(Component, Clone, PartialEq, Debug, Default)]
+#[derive(Component, Clone, Copy, PartialEq, Debug, Default)]
 pub enum SelectableType {
     #[default]
     Nothing, Carryable, Choppable, Constructable, Foragable, Harvestable, Huntable, Mineable, Unselecting, Unzoning, Zoning, Farm, Build, Tasks

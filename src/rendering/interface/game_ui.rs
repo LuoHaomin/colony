@@ -1,34 +1,45 @@
 use crate::prelude::*;
 
-// Create plugin.
+#[derive(Component)]
+pub struct MainHudRoot;
+
+#[derive(Component)]
+pub struct TopBar;
+
+#[derive(Component)]
+pub struct BottomBar;
+
+#[derive(Component)]
+pub struct InspectorPanel;
+
+#[derive(Component)]
+pub struct InspectorContent;
+
+#[derive(Component)]
+pub struct CommandButton {
+    pub menu_state: Option<MenuStates>,
+    pub selectable: Option<SelectableType>,
+    pub zone: Option<ZoneType>,
+    pub item: Option<ItemType>,
+}
+
 pub struct GameUiPlugin;
 
 impl Plugin for GameUiPlugin {
     fn build(&self, app: &mut App) {
         app
         .add_systems(
-            Startup,
-            initialize_game_ui
-        )
-        .add_systems(
             OnEnter(GameState::InGame),
-            start_game_ui
+            (initialize_game_ui, start_game_ui).chain()
         )
         .add_systems(
             Update,
-            game_ui_click.run_if(in_state(GameState::InGame))
-        )
-        // .add_startup_system(initialize_game_ui)
-        // .add_system_set(
-        //     SystemSet::on_enter(GameState::InGame)
-        //         .with_system(start_game_ui),
-        // )
-        // // .add_startup_system(start_game_ui)
-        // .add_system_set(
-        //     SystemSet::on_update(GameState::InGame)
-        //         .with_system(game_ui_click),
-        // )
-        ;
+            (
+                game_ui_click.run_if(in_state(GameState::InGame)),
+                hud_button_interaction.run_if(in_state(GameState::InGame)),
+                update_hud_on_state_change.run_if(in_state(GameState::InGame)),
+            )
+        );
     }
 }
 
@@ -36,225 +47,198 @@ pub fn initialize_game_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
+    // Root Node for HUD
     commands.spawn((
         Node {
-            position_type: PositionType::Absolute,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            left: Val::Px(0.0),
-            bottom: Val::Px(0.0),
             width: Val::Percent(100.0),
-            height: Val::Px(32.0),
-            ..Default::default()
+            height: Val::Percent(100.0),
+            ..default()
         },
-        BackgroundColor(Color::srgba(0.65, 0.65, 0.65, 0.65)),
-    ))
-    .with_children(|parent| {
-        // Add Icon
-        for i in 0..6 {
-            parent.spawn((
+        MainHudRoot,
+    )).with_children(|parent| {
+        // TOP BAR
+        parent.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(0.0),
+                left: Val::Px(0.0),
+                width: Val::Percent(100.0),
+                height: Val::Px(40.0),
+                padding: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.8)),
+            TopBar,
+        )).with_children(|top| {
+            top.spawn(Text::new("Observation Ark - Colony v0.1.1"));
+        });
+
+        // BOTTOM BAR
+        parent.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.0),
+                left: Val::Px(0.0),
+                width: Val::Percent(100.0),
+                height: Val::Px(80.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.9)),
+            BottomBar,
+        ));
+
+        // INSPECTOR PANEL (Right side)
+        parent.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(40.0),
+                right: Val::Px(0.0),
+                width: Val::Px(250.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(10.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.05, 0.05, 0.05, 0.85)),
+            InspectorPanel,
+        )).with_children(|inspector| {
+            inspector.spawn((
                 Node {
-                    position_type: PositionType::Absolute,
-                    left: Val::Px(32.0 * i as f32),
-                    top: Val::Px(0.0),
-                    width: Val::Px(32.0),
-                    height: Val::Px(32.0),
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                ImageNode::new(asset_server.load(format!("i-{}.png", i))),
+                InspectorContent,
             ));
-        }
+        });
     });
 }
 
-pub fn start_game_ui(
+pub fn update_hud_on_state_change(
+    menu_state: Res<MenuState>,
     mut commands: Commands,
+    bottom_bar: Query<Entity, With<BottomBar>>,
+    button_query: Query<Entity, With<CommandButton>>,
     font: Res<MyFont>,
-    mut menu_state: ResMut<MenuState>,
-    game_buttons: Query<Entity, With<InGameButton>>,
 ) {
-    let text_font = TextFont { font: font.0.clone().into(), font_size: 18.0, ..default() };
-    let buttons = [vec![
-        "TASKS",
-        "FARM",
-        "BUILD",
-        "ZONE",
-    ],vec![ // tasks
-        "BACK",
-        "CLEAR",
-        "CHOP",
-        "FORAGE",
-        "CARRY",
-        "HUNT",
-        "MINE",
-    ],vec![ // farm
-        "BACK",
-        "NOTHING",
-        "CABBAGE",
-        "PINE",
-        "OAK",
-        "CEDAR",
-    ],vec![ // zone
-        "BACK",
-        "NOTHING",
-        "FISHING",
-        "STORAGE",
-        "MEETING",
-        "AVOID",
-    ],vec![ // build
-        "BACK",
-        "NOTHING",
-        "WALL",
-        "BED",
-        "TABLE",
-        "CHAIR",
-    ],
-    ]
-    ;
-    for button in game_buttons.iter() {
-        commands.entity(button).despawn();
-    }
-    //println!("BUTTON: {:?}", buttons[menu_state.i]);
-    if (buttons.len()-1) < menu_state.state.to_index() {
-        menu_state.state = MenuStates::Home;
-    }
-    for (i, button_text) in buttons[menu_state.state.to_index()].iter().enumerate() {
-        commands.spawn((Node {
-            position_type: PositionType::Absolute,
-            left: Val::Px(100.0 + 100.0 * i as f32),
-            bottom: Val::Px(30.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            width: Val::Px(84.0),
-            height: Val::Px(64.0),
-            ..default()
-        }, BackgroundColor(Color::srgba(0.65, 0.65, 0.85, 0.65)), InGameButton)).with_children(|parent| {
-                parent.spawn((Text::new(button_text.to_owned()), text_font.clone(), TextColor(Color::WHITE.into())));
-        })
-        ;
+    if menu_state.is_changed() {
+        for entity in button_query.iter() {
+            commands.entity(entity).despawn();
+        }
+
+        if let Some(bottom_bar_entity) = bottom_bar.iter().next() {
+            let text_font = TextFont { font: font.0.clone(), font_size: 16.0, ..default() };
+            
+            // Build buttons based on menu_state.state
+            let buttons = match menu_state.state {
+                MenuStates::Home => vec![
+                    ("TASKS", Some(MenuStates::Tasks), None, None, None),
+                    ("FARM", Some(MenuStates::Farm), None, None, None),
+                    ("BUILD", Some(MenuStates::Build), None, None, None),
+                    ("ZONE", Some(MenuStates::Zone), None, None, None),
+                ],
+                MenuStates::Tasks => vec![
+                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
+                    ("CLEAR", None, Some(SelectableType::Unselecting), None, None),
+                    ("CHOP", None, Some(SelectableType::Choppable), None, None),
+                    ("FORAGE", None, Some(SelectableType::Foragable), None, None),
+                    ("CARRY", None, Some(SelectableType::Carryable), None, None),
+                    ("HUNT", None, Some(SelectableType::Huntable), None, None),
+                    ("MINE", None, Some(SelectableType::Mineable), None, None),
+                ],
+                MenuStates::Farm => vec![
+                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
+                    ("CLEAR", None, Some(SelectableType::Unzoning), None, None),
+                    ("CABBAGE", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::Cabbage)),
+                    ("PINE", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::PineTree)),
+                    ("OAK", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::OakTree)),
+                    ("CEDAR", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::CedarTree)),
+                ],
+                MenuStates::Build => vec![
+                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
+                    ("CLEAR", None, Some(SelectableType::Unzoning), None, None),
+                    ("WALL", None, Some(SelectableType::Zoning), Some(ZoneType::Construction), Some(ItemType::WallWood)),
+                    // Add more later
+                ],
+                MenuStates::Zone => vec![
+                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
+                    ("STORAGE", None, Some(SelectableType::Zoning), Some(ZoneType::Storage), None),
+                    ("AVOID", None, Some(SelectableType::Zoning), Some(ZoneType::Avoid), None),
+                ],
+            };
+
+            commands.entity(bottom_bar_entity).with_children(|parent| {
+                for (label, m_state, s_type, z_type, i_type) in buttons {
+                    parent.spawn((
+                        Button,
+                        Node {
+                            width: Val::Px(90.0),
+                            height: Val::Px(60.0),
+                            margin: UiRect::horizontal(Val::Px(5.0)),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgba(0.3, 0.3, 0.5, 1.0)),
+                        CommandButton {
+                            menu_state: m_state,
+                            selectable: s_type,
+                            zone: z_type,
+                            item: i_type,
+                        },
+                    )).with_children(|btn| {
+                        btn.spawn((Text::new(label), text_font.clone()));
+                    });
+                }
+            });
+        }
     }
 }
 
-pub fn game_ui_click(
-    commands: Commands,
-    mouse_button_input: Res<ButtonInput<MouseButton>>,
-    mut windows: Query<&mut Window>,
+pub fn hud_button_interaction(
+    mut interaction_query: Query<
+        (&Interaction, &CommandButton, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
     mut menu_state: ResMut<MenuState>,
-    font: Res<MyFont>,
-    game_buttons: Query<Entity, With<InGameButton>>,
     mut dragging: ResMut<Dragging>,
 ) {
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        let window = windows.single_mut().expect("No primary window");
-        let wc = window.cursor_position();
-        if let Some(wc) = wc {
-            let y = window.height() - wc.y;
-            if y > 30.0 && y < 92.0 {
-                let button_index = (wc.x as i32 - 100) / 100;
-                match menu_state.state {
-                    MenuStates::Home => {
-                        match button_index {
-                            0 => { menu_state.state = MenuStates::Tasks },
-                            1 => { menu_state.state = MenuStates::Farm },
-                            2 => { menu_state.state = MenuStates::Build },
-                            3 => { menu_state.state = MenuStates::Zone },
-                            _ => { },
-                        }
-                    }
-                    MenuStates::Tasks => { // chop, forage, carry, hunt, mine
-                        match button_index {
-                            0 => {
-                                dragging.looking_for = SelectableType::Nothing;
-                                menu_state.state = MenuStates::Home;
-                            },
-                            1 => {
-                                dragging.looking_for = SelectableType::Unselecting;
-                            },
-                            2 => {
-                                dragging.looking_for = SelectableType::Choppable;
-                            },
-                            3 => {
-                                dragging.looking_for = SelectableType::Foragable;
-                            },
-                            4 => {
-                                dragging.looking_for = SelectableType::Carryable;
-                            },
-                            5 => {
-                                dragging.looking_for = SelectableType::Huntable;
-                            },
-                            6 => {
-                                dragging.looking_for = SelectableType::Mineable;
-                            },
-                            _ => { },
-                        }
-                    }
-                    MenuStates::Farm => {
-                        match button_index {
-                            0 => {
-                                dragging.looking_for = SelectableType::Nothing;
-                                menu_state.state = MenuStates::Home;
-                            },
-                            1 => {
-                                dragging.looking_for = SelectableType::Unzoning;
-                            },
-                            2 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Farm;
-                                dragging.item_type = ItemType::Cabbage;
-                            },
-                            3 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Farm;
-                                dragging.item_type = ItemType::PineTree;
-                            },
-                            4 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Farm;
-                                dragging.item_type = ItemType::OakTree;
-                            },
-                            5 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Farm;
-                                dragging.item_type = ItemType::CedarTree;
-                            },
-                            _ => { },
-                        }
-                    }
-                    MenuStates::Build => {
-                        match button_index {
-                            1 => {
-                                dragging.looking_for = SelectableType::Unzoning;
-                            },
-                            2 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Construction;
-                                dragging.item_type = ItemType::WallWood;
-                            },
-                            _ => {
-                                dragging.looking_for = SelectableType::Nothing;
-                                menu_state.state = MenuStates::Home;
-                            },
-                        }
-                    }
-                    MenuStates::Zone => {
-                        match button_index {
-                            3 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Storage;
-                            }
-                            5 => {
-                                dragging.looking_for = SelectableType::Zoning;
-                                dragging.zone_type = ZoneType::Avoid;
-                            },
-                            _ => {
-                                dragging.looking_for = SelectableType::Nothing;
-                                menu_state.state = MenuStates::Home;
-                            },
-                        }
-                    }
+    for (interaction, button, mut bg_color) in interaction_query.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => {
+                *bg_color = BackgroundColor(Color::srgba(0.5, 0.5, 0.8, 1.0));
+                if let Some(ms) = button.menu_state {
+                    menu_state.state = ms;
                 }
-                start_game_ui(commands, font, menu_state, game_buttons);
+                if let Some(st) = button.selectable {
+                    dragging.looking_for = st;
+                }
+                if let Some(zt) = button.zone {
+                    dragging.zone_type = zt;
+                }
+                if let Some(it) = button.item {
+                    dragging.item_type = it;
+                }
+            }
+            Interaction::Hovered => {
+                *bg_color = BackgroundColor(Color::srgba(0.4, 0.4, 0.7, 1.0));
+            }
+            Interaction::None => {
+                *bg_color = BackgroundColor(Color::srgba(0.3, 0.3, 0.5, 1.0));
             }
         }
     }
 }
+
+// Keeping old systems for now to avoid breaking other logic, 
+// but we'll disable their functionality or transition them.
+pub fn start_game_ui(
+    mut menu_state: ResMut<MenuState>,
+) {
+    // Just trigger a change to refresh the HUD
+    menu_state.as_mut().state = MenuStates::Home;
+}
+
+pub fn game_ui_click() {}
+
