@@ -14,7 +14,7 @@ impl Plugin for ClickPlugin {
                 mouse_drag_system,
                 object_finder_system,
                 mouse_move_system
-            ).run_if(in_state(GameState::InGame))
+            ).run_if(in_state(GameState::InGame).or(in_state(GameState::Paused)))
         )
         ;
     }
@@ -34,6 +34,7 @@ pub fn mouse_click_input(
 
         if let Some(screen_pos) = window.cursor_position() {
             if let Some(position) = mouse_to_position(camera, camera_transform, screen_pos) {
+                println!("Mouse click at screen {:?}, mapped to grid {:?}", screen_pos, position);
                 event.write(ObjectFinderEvent { position });
                 dragging.dragging = true;
                 dragging.start_position = Some(position);
@@ -91,31 +92,59 @@ pub fn mouse_to_position(
     camera_transform: &GlobalTransform,
     screen_pos: Vec2,
 ) -> Option<Position> {
-    let ray = camera.viewport_to_world(camera_transform, screen_pos).ok()?;
-    let t = -ray.origin.z / ray.direction.z;
-    let intersection = ray.origin + ray.direction * t;
+    // 2D Camera viewport to world
+    let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, screen_pos) else { return None; };
+    
     Some(Position {
-        x: intersection.x.round() as i32,
-        y: intersection.y.round() as i32,
+        x: (world_pos.x / TILE_SIZE).round() as i32,
+        y: (world_pos.y / TILE_SIZE).round() as i32,
         z: 0,
     })
 }
 
 pub fn object_finder_system(
+    mut commands: Commands,
     mut event: MessageReader<ObjectFinderEvent>,
     mut selected_object: ResMut<SelectedObjectInformation>,
-    objects: Query<(Entity, &Position)>,
+    objects: Query<(Entity, &Position, Option<&MapTile>)>,
+    already_clicked: Query<Entity, With<ClickedOn>>,
+    current_z: Res<CurrentDisplayZ>,
 ) {
     for e in event.read() {
-        let mut found = false;
-        for (entity, position) in objects.iter() {
+        println!("Click detected at grid: {}, {}", e.position.x, e.position.y);
+        
+        // Clear previous selection
+        for entity in already_clicked.iter() {
+            commands.entity(entity).remove::<ClickedOn>();
+        }
+
+        let mut found_entity = None;
+        let mut found_tile = None;
+
+        // Find the "best" object at this coordinate.
+        // We look for units on ANY layer first, then the specific layer tile.
+        for (entity, position, is_tile) in objects.iter() {
             if position.x == e.position.x && position.y == e.position.y {
-                selected_object.entity = Some(entity);
-                found = true;
-                break;
+                if is_tile.is_some() {
+                    // Only match tiles on current display layer
+                    if position.z == current_z.z {
+                        found_tile = Some(entity);
+                    }
+                } else {
+                    // Match units if they are at or below current layer (visible)
+                    if position.z <= current_z.z {
+                        found_entity = Some(entity);
+                    }
+                }
             }
         }
-        if !found {
+        
+        let target = found_entity.or(found_tile);
+        if let Some(entity) = target {
+            println!("Selected entity: {:?}", entity);
+            selected_object.entity = Some(entity);
+            commands.entity(entity).insert(ClickedOn);
+        } else {
             selected_object.entity = None;
         }
     }

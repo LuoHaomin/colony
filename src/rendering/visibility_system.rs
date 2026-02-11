@@ -4,7 +4,9 @@ pub struct VisibilityPlugin;
 
 impl Plugin for VisibilityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
+        app
+        .init_resource::<VisualizationMode>()
+        .add_systems(Update, (
             update_visibility,
         ));
     }
@@ -12,6 +14,7 @@ impl Plugin for VisibilityPlugin {
 
 pub fn update_visibility(
     current_z: Res<CurrentDisplayZ>,
+    viz_mode: Res<VisualizationMode>,
     mut query: Query<(&Position, &mut Visibility, Option<&mut Sprite>, Option<&EnvironmentalData>, Option<&MapTile>)>,
 ) {
     for (position, mut visibility, sprite, env_data, is_map_tile) in query.iter_mut() {
@@ -25,15 +28,29 @@ pub fn update_visibility(
                 // Environment Tint for MapTiles
                 if is_map_tile.is_some() {
                     if let Some(env) = env_data {
-                        // Blend fertility into green
-                        let fertility = env.fertility.clamp(0.0, 1.0);
-                        let temp = (env.temperature / 40.0 + 0.5).clamp(0.0, 1.0); // 0C to 40C scale
-                        
-                        base_color = Color::srgb(
-                            1.0 - fertility * 0.5 + temp * 0.2, // R
-                            1.0 + fertility * 0.2,             // G
-                            1.0 - fertility * 0.5 - temp * 0.2  // B
-                        );
+                        match *viz_mode {
+                            VisualizationMode::Normal => {
+                                // Subtle blend of all factors
+                                let fertility = env.fertility.clamp(0.0, 1.0);
+                                base_color = Color::srgb(
+                                    1.0 - fertility * 0.2,
+                                    1.0 + fertility * 0.1,
+                                    1.0 - fertility * 0.2
+                                );
+                            },
+                            VisualizationMode::Temperature => {
+                                let temp = (env.temperature / 40.0 + 0.5).clamp(0.0, 1.0);
+                                base_color = Color::srgb(temp, 0.2, 1.0 - temp);
+                            },
+                            VisualizationMode::Humidity => {
+                                let hum = env.humidity.clamp(0.0, 1.0);
+                                base_color = Color::srgb(0.2, 0.2, hum);
+                            },
+                            VisualizationMode::Fertility => {
+                                let fert = env.fertility.clamp(0.0, 1.0);
+                                base_color = Color::srgb(0.2, fert, 0.2);
+                            },
+                        }
                     }
                 }
                 s.color = base_color;
@@ -48,7 +65,7 @@ pub fn update_visibility(
                 if let Some(mut s) = sprite {
                     let mut dim = 1.0 - (diff * 0.25);
                     
-                    if is_map_tile.is_some() {
+                    if is_map_tile.is_some() && *viz_mode == VisualizationMode::Normal {
                         if let Some(env) = env_data {
                             let fertility = env.fertility.clamp(0.0, 1.0);
                             s.color = Color::srgb(

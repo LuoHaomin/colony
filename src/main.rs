@@ -36,6 +36,7 @@ fn main() {
         .init_resource::<Dragging>()
         .init_resource::<GameSpeed>()
         .init_resource::<CurrentDisplayZ>()
+        .init_resource::<VisualizationMode>()
         .init_resource::<UniversalMeshAssets>()
         .init_resource::<SpriteSheet>()
         .init_resource::<MyFont>()

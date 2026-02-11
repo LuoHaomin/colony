@@ -7,8 +7,14 @@ pub struct StartupPlugin;
 
 impl Plugin for StartupPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), (spawn_settlers, spawn_starting_stuff));
+        app.add_systems(OnEnter(GameState::Initializing), (spawn_settlers, spawn_starting_stuff, finalize_initialization).chain());
     }
+}
+
+pub fn finalize_initialization(
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    next_state.set(GameState::InGame);
 }
 
 pub fn spawn_settlers(

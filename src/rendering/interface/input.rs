@@ -7,12 +7,13 @@ pub fn keyboard_input(
     gamestate: Res<State<GameState>>,
     mut nextstate: ResMut<NextState<GameState>>,
     mut current_z: ResMut<CurrentDisplayZ>,
+    mut viz_mode: ResMut<VisualizationMode>,
 ) {
     if input.just_pressed(KeyCode::Space) {
         // Pause or Unpause.
         match gamestate.get() {
             GameState::MainMenu => {
-                nextstate.set(GameState::InGame);
+                nextstate.set(GameState::Initializing);
             }
             GameState::InGame => {
                 nextstate.set(GameState::Paused);
@@ -20,7 +21,19 @@ pub fn keyboard_input(
             GameState::Paused => {
                 nextstate.set(GameState::InGame);
             }
+            _ => {}
         }
+    }
+
+    // Toggle Visualization Modes
+    if input.pressed(KeyCode::KeyT) {
+        *viz_mode = VisualizationMode::Temperature;
+    } else if input.pressed(KeyCode::KeyH) {
+        *viz_mode = VisualizationMode::Humidity;
+    } else if input.pressed(KeyCode::KeyF) {
+        *viz_mode = VisualizationMode::Fertility;
+    } else {
+        *viz_mode = VisualizationMode::Normal;
     }
 
     if input.just_pressed(KeyCode::Comma) || input.just_pressed(KeyCode::KeyQ) {

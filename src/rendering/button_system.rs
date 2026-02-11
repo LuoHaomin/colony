@@ -39,9 +39,9 @@ fn button_system(
         let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Pressed => {
-                text.0 = "Press".to_string();
+                text.0 = "Starting...".to_string();
                 *color = PRESSED_BUTTON.into();
-                nextstate.set(GameState::InGame);
+                nextstate.set(GameState::Initializing);
             }
             Interaction::Hovered => {
                 text.0 = "Hover".to_string();

@@ -33,7 +33,18 @@ fn open_main_menu(
     // Create main menu
     let text_font = TextFont { font: font.0.clone().into(), font_size: 18.0, ..default() };
     commands
-        .spawn((Node { flex_direction: FlexDirection::Column, position_type: PositionType::Absolute, justify_content: JustifyContent::Center, align_items: AlignItems::Center, left: Val::Px(0.0), top: Val::Px(0.0), width: Val::Px(width), height: Val::Px(height), ..Default::default() }, BackgroundColor(Color::srgba(0.65, 1.0, 0.65, 0.65))))
+        .spawn((
+            Node { 
+                flex_direction: FlexDirection::Column, 
+                position_type: PositionType::Absolute, 
+                justify_content: JustifyContent::Center, 
+                align_items: AlignItems::Center, 
+                width: Val::Vw(100.0), 
+                height: Val::Vh(100.0), 
+                ..Default::default() 
+            }, 
+            BackgroundColor(Color::srgba(0.15, 0.25, 0.15, 1.0))
+        ))
         .insert(MainMenuOverlay)
         .with_children(|parent| {
             parent.spawn((Text::new("WELCOME TO".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));

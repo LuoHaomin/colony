@@ -29,15 +29,15 @@ impl Plugin for GameUiPlugin {
     fn build(&self, app: &mut App) {
         app
         .add_systems(
-            OnEnter(GameState::InGame),
+            OnEnter(GameState::Initializing),
             (initialize_game_ui, start_game_ui).chain()
         )
         .add_systems(
             Update,
             (
-                game_ui_click.run_if(in_state(GameState::InGame)),
-                hud_button_interaction.run_if(in_state(GameState::InGame)),
-                update_hud_on_state_change.run_if(in_state(GameState::InGame)),
+                game_ui_click.run_if(in_state(GameState::InGame).or(in_state(GameState::Paused))),
+                hud_button_interaction.run_if(in_state(GameState::InGame).or(in_state(GameState::Paused))),
+                update_hud_on_state_change.run_if(in_state(GameState::InGame).or(in_state(GameState::Paused))),
             )
         );
     }
@@ -54,6 +54,7 @@ pub fn initialize_game_ui(
             height: Val::Percent(100.0),
             ..default()
         },
+        bevy::ui::FocusPolicy::Pass,
         MainHudRoot,
     )).with_children(|parent| {
         // TOP BAR
@@ -131,41 +132,9 @@ pub fn update_hud_on_state_change(
             let text_font = TextFont { font: font.0.clone(), font_size: 16.0, ..default() };
             
             // Build buttons based on menu_state.state
-            let buttons = match menu_state.state {
-                MenuStates::Home => vec![
-                    ("TASKS", Some(MenuStates::Tasks), None, None, None),
-                    ("FARM", Some(MenuStates::Farm), None, None, None),
-                    ("BUILD", Some(MenuStates::Build), None, None, None),
-                    ("ZONE", Some(MenuStates::Zone), None, None, None),
-                ],
-                MenuStates::Tasks => vec![
-                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
-                    ("CLEAR", None, Some(SelectableType::Unselecting), None, None),
-                    ("CHOP", None, Some(SelectableType::Choppable), None, None),
-                    ("FORAGE", None, Some(SelectableType::Foragable), None, None),
-                    ("CARRY", None, Some(SelectableType::Carryable), None, None),
-                    ("HUNT", None, Some(SelectableType::Huntable), None, None),
-                    ("MINE", None, Some(SelectableType::Mineable), None, None),
-                ],
-                MenuStates::Farm => vec![
-                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
-                    ("CLEAR", None, Some(SelectableType::Unzoning), None, None),
-                    ("CABBAGE", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::Cabbage)),
-                    ("PINE", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::PineTree)),
-                    ("OAK", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::OakTree)),
-                    ("CEDAR", None, Some(SelectableType::Zoning), Some(ZoneType::Farm), Some(ItemType::CedarTree)),
-                ],
-                MenuStates::Build => vec![
-                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
-                    ("CLEAR", None, Some(SelectableType::Unzoning), None, None),
-                    ("WALL", None, Some(SelectableType::Zoning), Some(ZoneType::Construction), Some(ItemType::WallWood)),
-                    // Add more later
-                ],
-                MenuStates::Zone => vec![
-                    ("BACK", Some(MenuStates::Home), Some(SelectableType::Nothing), None, None),
-                    ("STORAGE", None, Some(SelectableType::Zoning), Some(ZoneType::Storage), None),
-                    ("AVOID", None, Some(SelectableType::Zoning), Some(ZoneType::Avoid), None),
-                ],
+            let buttons: Vec<(String, Option<MenuStates>, Option<SelectableType>, Option<ZoneType>, Option<ItemType>)> = match menu_state.state {
+                MenuStates::Home => vec![],
+                _ => vec![],
             };
 
             commands.entity(bottom_bar_entity).with_children(|parent| {

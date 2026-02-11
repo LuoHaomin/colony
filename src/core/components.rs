@@ -5,6 +5,7 @@
 pub enum GameState {
     #[default]
     MainMenu,
+    Initializing,
     InGame,
     Paused,
 }
@@ -90,6 +91,15 @@ pub struct EnvironmentalData {
     pub temperature: f32,
     pub humidity: f32,
     pub fertility: f32,
+}
+
+#[derive(Resource, Default, PartialEq)]
+pub enum VisualizationMode {
+    #[default]
+    Normal,
+    Temperature,
+    Humidity,
+    Fertility,
 }
 
 #[derive(Component)]
