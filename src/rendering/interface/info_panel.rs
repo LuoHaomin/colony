@@ -21,7 +21,7 @@ pub fn update_inspector(
 ) {
     // Force update if changed
     if object_info.is_changed() {
-        println!("INFO PANEL: Detected change. Updating UI with {} lines of info.", object_info.info.len());
+        // println!("INFO PANEL: Detected change. Updating UI with {} lines of info.", object_info.info.len());
         // Clear old items
         for entity in items_to_clear.iter() {
             commands.entity(entity).despawn();
