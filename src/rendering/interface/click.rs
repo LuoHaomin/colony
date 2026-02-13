@@ -53,7 +53,7 @@ pub fn mouse_click_input(
 }
 
 pub fn mouse_drag_system(
-    mut dragging: ResMut<Dragging>,
+    dragging: ResMut<Dragging>,
     windows: Query<&Window>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut selection_event: MessageWriter<SelectionEvent>,

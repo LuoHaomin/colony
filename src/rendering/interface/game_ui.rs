@@ -45,7 +45,6 @@ impl Plugin for GameUiPlugin {
 
 pub fn initialize_game_ui(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
 ) {
     // Root Node for HUD
     commands.spawn((

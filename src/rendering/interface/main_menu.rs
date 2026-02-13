@@ -21,11 +21,11 @@ fn open_main_menu(
     mut commands: Commands,
     _asset_server: Res<AssetServer>,
     _materials: ResMut<Assets<ColorMaterial>>,
-    mut windows: Query<&mut Window>,
+    windows: Query<&Window>,
     font: Res<MyFont>,
 ) {
     // Center window
-    let mut window = windows.single_mut().expect("No primary window");
+    let window = windows.single().expect("No primary window");
     let width = window.width();
     let height = window.height();
     let _window_size = Vec2::new(width, height);

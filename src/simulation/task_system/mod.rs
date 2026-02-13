@@ -1,63 +1,43 @@
 use crate::prelude::*;
 
-mod chop;
-mod eat;
-mod forage;
-mod meander;
-mod personality;
-use personality::PersonalityPlugin;
-mod plant;
-mod play;
-mod sleep;
-mod work;
-
-// Make Plugin
 pub struct TaskPlugin;
 
 impl Plugin for TaskPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_plugins(PersonalityPlugin)
-        .add_systems(FixedUpdate,
-            (
-                eat::task_system_eat
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                sleep::task_system_sleep
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                sleep::task_system_sleep
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                play::task_system_play
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                meander::task_system_meander
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                work::task_system_work
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                forage::task_system_forage
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                chop::task_system_chop
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            ,
-                plant::task_system_zone
-                .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5)))
-                .run_if(in_state(GameState::InGame))
-            )
-        )
-        ;
+        app.add_systems(FixedUpdate, (
+            task_bridge_system
+        ).run_if(in_state(GameState::InGame)));
+    }
+}
+
+/// A bridge system that converts high-level Tasks into the new Atomic Action sequences
+fn task_bridge_system(
+    mut query: Query<(Entity, &mut Brain, &Position)>,
+) {
+    for (_entity, mut brain, pos) in query.iter_mut() {
+        if brain.task.is_none() || brain.action.is_some() || !brain.action_queue.is_empty() {
+            continue;
+        }
+
+        let task = brain.task.unwrap();
+        match task {
+            Task::Maintain => {
+                // For now, just a placeholder action
+                brain.action_queue.push(AtomicAction::Scan); 
+                brain.task = None;
+            },
+            Task::Social => {
+                brain.action_queue.push(AtomicAction::Move(Position { 
+                    x: pos.x + rand::rng().random_range(-2..3),
+                    y: pos.y + rand::rng().random_range(-2..3), 
+                    z: pos.z 
+                }));
+                brain.task = None;
+            }
+            _ => {
+                brain.task = None;
+            }
+        }
     }
 }
 

@@ -355,23 +355,27 @@ pub enum PersonalityTrait {
 pub enum Task {
     #[default]
     Idle,
-    Crisis, Flee, Fight, Eat, Hospital, Sleep, Sleeping, Play, Order, Work, Personality, Meander,
-    Doctor, Forage, Plant, Harvest, Mine, Chop, Construct, Hunt, Milk, Cook, Fish, Craft, Clean, Pickup, Carrying
+    Survival,    // Seeking food/safety
+    Maintain,    // Sleeping/Homeostasis
+    Social,      // Interaction/Play
+    Meander,     // Random exploration
+    Manual,      // User-assigned (legacy placeholder)
 }
 
 impl Task {
     pub fn is_zone_task(&self) -> bool {
-        matches!(self, Task::Plant | Task::Construct | Task::Carrying)
-    }
-    pub fn get_steps(&self) -> Self {
-        *self
+        false
     }
 }
 
 #[derive(Component, PartialEq, Copy, Clone, Debug)]
 pub enum Motivation {
-    Crisis, Rage, Order, Danger, Hunger, Thirst, Tired, Injured, Sick, Bored, Happy, Sad, Angry, Lonely, Love, Fear, Hate, Work, Personality, Meander, Idle,
-    Eat, Hospital, Sleep, Play
+    Hunger,
+    Thirst,
+    Tired,
+    Bored,
+    Fear,
+    Idle,
 }
 
 #[derive(Component, PartialEq, Copy, Clone, Debug)]
@@ -403,7 +407,9 @@ impl ActorType {
 #[derive(Component, Clone, Copy, PartialEq, Debug, Default)]
 pub enum SelectableType {
     #[default]
-    Nothing, Carryable, Choppable, Constructable, Foragable, Harvestable, Huntable, Mineable, Unselecting, Unzoning, Zoning, Farm, Build, Tasks
+    Nothing, 
+    Entity,
+    Tile,
 }
 
 #[derive(Component)]
@@ -414,24 +420,6 @@ pub struct Renderable {
     pub fg: Color,
     pub bg: Color,
 }
-
-#[derive(Component, Default)]
-pub struct Bed;
-
-#[derive(Component, Debug)]
-pub struct Player {}
-
-#[derive(Component)]
-pub struct Foragable;
-
-#[derive(Component)]
-pub struct Choppable;
-
-#[derive(Component)]
-pub struct Harvestable;
-
-#[derive(Component)]
-pub struct Mineable;
 
 #[derive(Component)]
 pub struct Zone {
@@ -470,11 +458,6 @@ pub struct Nest {
 
 #[derive(Component)]
 pub struct Attackable;
-
-#[derive(Component)]
-pub struct Name {
-    pub name: String,
-}
 
 #[derive(Component)]
 pub struct StatusDisplay {

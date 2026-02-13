@@ -13,21 +13,13 @@ impl Plugin for SeasonsPlugin {
 }
 
 pub fn seasons_system(
-    mut commands: Commands,
-    mut plants: Query<(Entity, &mut Plant, &mut Transform, Option<&Foragable>, Option<&Choppable>)>,
+    _commands: Commands,
+    mut plants: Query<(&mut Plant, &mut Transform)>,
 ) {
-    for (entity, mut plant, mut transform, foragable, choppable) in plants.iter_mut() {
+    for (mut plant, mut transform) in plants.iter_mut() {
         if plant.growth < 1.0 {
             plant.growth += 0.05;
             transform.scale = Vec3::splat(plant.growth);
-            if plant.growth >= 0.5 {
-                if plant.plant_type.is_forageable().0.is_some() && foragable.is_none() {
-                    commands.entity(entity).insert(Foragable);
-                }
-                if plant.plant_type.is_choppable().0.is_some() && choppable.is_none() {
-                    commands.entity(entity).insert(Choppable);
-                }
-            }
         }
     }
 }

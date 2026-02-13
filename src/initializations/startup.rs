@@ -90,7 +90,7 @@ pub fn spawn_starting_stuff(
                 image: sprite_sheet.handle.clone(),
                 texture_atlas: Some(TextureAtlas {
                     layout: sprite_sheet.layout.clone(),
-                    index: ItemType::StatuePillar1.sprite_index(),
+                    index: ItemType::Statue.sprite_index(),
                 }),
                 ..default()
             },
@@ -127,7 +127,7 @@ pub fn spawn_starting_stuff(
         if biome.plants.is_empty() { continue; }
         let plant_type = biome.plants[rng.random_range(0..biome.plants.len())];
 
-        let plant = commands
+        let _plant = commands
             .spawn((
                 Sprite {
                     image: sprite_sheet.handle.clone(),
@@ -141,16 +141,10 @@ pub fn spawn_starting_stuff(
             ))
             .insert(position)
             .insert(Plant { growth, plant_type })
-            .insert( Object { itemtype: plant_type, ..default() } )
+            .insert(Object { itemtype: plant_type, ..default() })
+            .insert(plant_type.material_properties())
             .insert(Visibility::default())
             .id();
-        
-        if plant_type.is_forageable().0.is_some() && growth > 0.5 {
-            commands.entity(plant).insert(Foragable);
-        }
-        if plant_type.is_choppable().0.is_some() && growth > 0.5 {
-            commands.entity(plant).insert(Choppable);
-        }
     }
     
     // Spawn Objects (Items)
@@ -176,7 +170,7 @@ pub fn spawn_starting_stuff(
         if biome.objects.is_empty() { continue; }
         let object_type = biome.objects[rng.random_range(0..biome.objects.len())];
 
-        let object = commands
+        commands
             .spawn((
                 Sprite {
                     image: sprite_sheet.handle.clone(),
@@ -189,10 +183,9 @@ pub fn spawn_starting_stuff(
                 position.to_transform(),
             ))
             .insert(position)
-            .insert( Object { itemtype: object_type, ..default() } )
-            .insert(Visibility::default())
-            .id();
-        object_type.add_components(&mut commands, object);
+            .insert(Object { itemtype: object_type, ..default() })
+            .insert(object_type.material_properties())
+            .insert(Visibility::default());
     }
 }
 

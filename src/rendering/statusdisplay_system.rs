@@ -30,7 +30,7 @@ pub fn status_display_system (
                 vec_statuses.push("TIRED".to_string());
             }
         }
-        if let Some(Task::Sleeping) = brain.task {
+        if let Some(Task::Maintain) = brain.task {
             vec_statuses.push("ZZZ...".to_string());
         }
         // for child in children {

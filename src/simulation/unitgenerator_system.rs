@@ -1,5 +1,4 @@
 ﻿use crate::prelude::*;
-use rand::seq::SliceRandom;
 
 pub struct UnitGeneratorPlugin;
 

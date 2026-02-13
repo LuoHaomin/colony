@@ -10,10 +10,10 @@ impl Plugin for ActionPlugin {
 
 pub fn action_processor_system(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Brain, &mut PhysicalBody, &mut Position, &mut Transform, Option<&Genome>)>,
-    target_query: Query<(Option<&mut PhysicalBody>, &MaterialProperties)>,
+    mut actors: Query<(Entity, &mut Brain, &mut Position, &mut Transform, Option<&Genome>)>,
+    mut physics: Query<(Option<&mut PhysicalBody>, &MaterialProperties)>,
 ) {
-    for (entity, mut brain, mut body, mut pos, mut transform, _genome) in query.iter_mut() {
+    for (entity, mut brain, mut pos, mut transform, _genome) in actors.iter_mut() {
         if brain.action.is_none() && !brain.action_queue.is_empty() {
             brain.action = Some(brain.action_queue.remove(0));
         }
@@ -36,7 +36,7 @@ pub fn action_processor_system(
                     *transform = pos.to_transform();
                 },
                 AtomicAction::ApplyForce(target_entity, force) => {
-                    if let Ok((target_body, material)) = target_query.get(target_entity) {
+                    if let Ok((target_body, material)) = physics.get_mut(target_entity) {
                         let damage = (force - material.hardness).max(0.1);
                         
                         // Add visual feedback to target
@@ -53,30 +53,31 @@ pub fn action_processor_system(
                             // Target is inanimate - maybe damage its mass/toughness?
                             // For now just despawn if force is enough
                             if damage > material.toughness {
-                                commands.entity(target_entity).despawn_recursive();
+                                commands.entity(target_entity).despawn();
                             }
                         }
                     }
                     brain.action = None; 
                 },
                 AtomicAction::Consume(target_entity) => {
-                    if let Ok((target_body, material)) = target_query.get(target_entity) {
+                    // We need both actor's body and target's body
+                    if let Ok([(Some(mut actor_body), _), (target_body_opt, target_material)]) = physics.get_many_mut([entity, target_entity]) {
                         let energy_to_take = 5.0; // Base value
-                        let actual_energy = energy_to_take * material.energy_density;
+                        let actual_energy = energy_to_take * target_material.energy_density;
                         
-                        if let Some(mut b) = target_body {
+                        if let Some(mut b) = target_body_opt {
                             b.energy_storage -= energy_to_take;
                             if b.energy_storage <= 0.0 {
                                 // Consumed it completely
-                                commands.entity(target_entity).despawn_recursive();
+                                commands.entity(target_entity).despawn();
                             }
                         } else {
-                            // Consuming static material (e.g. berry)
-                            commands.entity(target_entity).despawn_recursive();
+                            // Consuming inanimate material
+                            commands.entity(target_entity).despawn();
                         }
                         
-                        body.energy_storage = (body.energy_storage + actual_energy).min(body.energy_max);
-                        info!("Entity {:?} consumed energy. New storage: {}", entity, body.energy_storage);
+                        actor_body.energy_storage = (actor_body.energy_storage + actual_energy).min(actor_body.energy_max);
+                        info!("Actor {:?} consumed energy. New storage: {}", entity, actor_body.energy_storage);
                     }
                     brain.action = None;
                 },

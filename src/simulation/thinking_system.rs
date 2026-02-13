@@ -90,7 +90,7 @@ pub fn thinking_system(
                     }));
                 }
             },
-            Motivation::Idle | Motivation::Meander => {
+            Motivation::Idle => {
                 brain.action_queue.push(AtomicAction::Move(Position { 
                     x: current_pos.x + rand::rng().random_range(-3..4),
                     y: current_pos.y + rand::rng().random_range(-3..4),
@@ -98,10 +98,10 @@ pub fn thinking_system(
                 }));
             },
             _ => {
-                // Fallback to legacy task system for other motivations
+                // Fallback or generic higher-level assignment
                 match best_motivation {
-                    Motivation::Tired => brain.task = Some(Task::Sleep),
-                    Motivation::Bored => brain.task = Some(Task::Play),
+                    Motivation::Tired => brain.task = Some(Task::Maintain),
+                    Motivation::Bored => brain.task = Some(Task::Social),
                     _ => brain.task = Some(Task::Idle),
                 }
             }

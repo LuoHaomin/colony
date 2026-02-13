@@ -55,10 +55,8 @@ fn main() {
         .init_state::<GameState>()
         .add_plugins((
             rendering::interface::MainMenusPlugin, 
-            rendering::button_system::ButtonPlugin,
             rendering::selection_systems::SelectionPlugin,
             simulation::monstergenerator_system::MonsterGeneratorPlugin,
-            simulation::movetoward_system::MovementPlugin,
             simulation::seasons::SeasonsPlugin,
             simulation::needs::NeedsPlugin,
             rendering::interface::GameUiPlugin,
@@ -69,7 +67,6 @@ fn main() {
             simulation::thinking_system::ThinkingPlugin,
             simulation::action_system::ActionPlugin,
             simulation::task_system::TaskPlugin,
-            simulation::combat_system::CombatPlugin,
             simulation::reproduction_system::ReproductionPlugin,
             simulation::spoilage_system::SpoilagePlugin,
             rendering::interface::ClickPlugin,
@@ -77,12 +74,8 @@ fn main() {
         ))
         .add_systems(
             FixedUpdate, (
-                simulation::moverandom_system::movement_random
-                    .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.1))),
                 remove_bad_positions,
                 simulation::namegiving_system::namegiving_system,
-                simulation::movetoward_system::movement_toward_attackable,
-                simulation::nest::nest_system,
             ).run_if(in_state(GameState::InGame))
         )
         .add_systems(
