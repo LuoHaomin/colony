@@ -10,10 +10,39 @@ impl Plugin for MainMenusPlugin {
             open_main_menu
         )
         .add_systems(
+            Update,
+            main_menu_button_system.run_if(in_state(GameState::MainMenu))
+        )
+        .add_systems(
             OnExit(GameState::MainMenu), 
             close_main_menu
         )
         ;
+    }
+}
+
+pub fn main_menu_button_system(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    for (interaction, mut color) in interaction_query.iter_mut() {
+        println!("Main Menu Button Interaction: {:?}", interaction);
+        match *interaction {
+            Interaction::Pressed => {
+                println!("START GAME BUTTON PRESSED!");
+                *color = BackgroundColor(Color::srgb(0.35, 0.75, 0.35));
+                next_state.set(GameState::Initializing);
+            }
+            Interaction::Hovered => {
+                *color = BackgroundColor(Color::srgb(0.25, 0.25, 0.25));
+            }
+            Interaction::None => {
+                *color = BackgroundColor(Color::srgb(0.15, 0.15, 0.15));
+            }
+        }
     }
 }
 
@@ -39,13 +68,13 @@ fn open_main_menu(
                 position_type: PositionType::Absolute, 
                 justify_content: JustifyContent::Center, 
                 align_items: AlignItems::Center, 
-                width: Val::Vw(100.0), 
-                height: Val::Vh(100.0), 
+                width: Val::Percent(100.0), 
+                height: Val::Percent(100.0), 
                 ..Default::default() 
             }, 
-            BackgroundColor(Color::srgba(0.15, 0.25, 0.15, 1.0))
+            BackgroundColor(Color::srgba(0.15, 0.25, 0.15, 1.0)),
+            MainMenuOverlay,
         ))
-        .insert(MainMenuOverlay)
         .with_children(|parent| {
             parent.spawn((Text::new("WELCOME TO".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
             parent.spawn((Text::new("COLONY".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
@@ -54,53 +83,29 @@ fn open_main_menu(
             parent.spawn((
                 Button,
                 Node { 
-                    width: Val::Px(200.0), 
-                    height: Val::Px(50.0), 
+                    width: Val::Px(240.0), 
+                    height: Val::Px(60.0), 
                     margin: UiRect::all(Val::Px(20.0)), 
                     justify_content: JustifyContent::Center, 
                     align_items: AlignItems::Center, 
+                    border: UiRect::all(Val::Px(2.0)),
                     ..default() 
                 }, 
-                BackgroundColor(Color::srgb(0.15, 0.15, 0.15))
+                BorderColor::all(Color::WHITE),
+                BackgroundColor(Color::srgb(0.2, 0.2, 0.2))
             ))
             .with_children(|parent| {
                 parent.spawn((Text::new("Start Game".to_string()), text_font.clone(), TextColor(Color::WHITE.into())));
             });
-
-
         })
-        // .spawn(TextComponents {
-        //     text: Text {
-        //         value: "Press Space to Start".to_string(),
-        //         font: asset_server.load("fonts/Roboto-Bold.ttf"),
-        //         style: TextStyle {
-        //             font_size: 30.0,
-        //             color: Color::rgb(0.9, 0.9, 0.9),
-        //             ..Default::default()
-        //         },
-        //     },
-        //     style: Style {
-        //         size: Size::new(Val::Px(window_size.x), Val::Px(window_size.y)),
-        //         position_type: PositionType::Absolute,
-        //         position: Rect {
-        //             left: Val::Px(0.0),
-        //             top: Val::Px(0.0),
-        //             ..Default::default()
-        //         },
-        //         ..Default::default()
-        //     },
-        //     ..Default::default()
-        // })
         ;
 }
 
 pub fn close_main_menu(
     mut commands: Commands,
-    _state: Res<State<GameState>>,
     mut query: Query<Entity, With<MainMenuOverlay>>,
 ) {
     for entity in query.iter_mut() {
         commands.entity(entity).despawn();
     }
-    // state.set(GameState::InGame).unwrap();
 }
