@@ -118,13 +118,13 @@ fn do_melee_damage(
     body2: &mut PhysicalBody,
     _asset_server: &Res<AssetServer>
 ) {
-    let damage =
+    let damage = (
         1 +
         (attacker_body.attributes.strength - body2.attributes.constitution).max(0).min(20) +
         (attacker_body.skillset.brawling.level()).max(0).min(20)
-        ;
-    body2.attributes.health -= damage;
-    if body2.attributes.health <= 0 {
+    ) as f32;
+    body2.health -= damage;
+    if body2.health <= 0.0 {
         // Predation energy gain
         if let Some(genome) = attacker_genome {
             // Carnivores gain energy from kills

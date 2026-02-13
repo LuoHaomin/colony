@@ -20,6 +20,7 @@ pub fn spawn_unit_from_template(
         needs_sleep: template.sleep_need.map(Into::into),
         energy_max: 100.0,
         energy_storage: 90.0,
+        health: 100.0,
         index: 0,
         crisis: None,
         danger: None,
@@ -40,6 +41,13 @@ pub fn spawn_unit_from_template(
                 ..default()
             },
             position.to_transform(),
+            MaterialProperties {
+                mass: 1.0,
+                hardness: 1.0,
+                toughness: 1.0,
+                energy_density: 1.0,
+                conductivity: 1.0,
+            },
         ))
         .insert(position)
         .id();
@@ -117,7 +125,12 @@ impl UnitTemplate {
     pub fn human() -> Self {
         Self {
             actor_type: ActorType::Man,
-            genome: Some(Genome { size: 1.0, mobility: 1.0, sensory_range: 15.0, metabolic_efficiency: 0.8, diet_type: 0.5, sociality: 0.8, aggression: 0.2, mutation_rate: 0.05 }),
+            genome: Some(Genome { 
+                size: 1.0, mobility: 1.0, sensory_range: 15.0, physical_strength: 1.0,
+                metabolic_efficiency: 0.8, diet_type: 0.5, thermal_tolerance: 15.0,
+                sociality: 0.8, aggression: 0.2, mutation_rate: 0.05,
+                weight_hunger: 1.0, weight_fatigue: 1.0, weight_social: 1.0
+            }),
             food_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             entertainment_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             sleep_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
@@ -133,7 +146,12 @@ impl UnitTemplate {
     pub fn elf() -> Self {
         Self {
             actor_type: ActorType::Elf,
-            genome: Some(Genome { size: 0.9, mobility: 1.2, sensory_range: 20.0, metabolic_efficiency: 0.7, diet_type: 0.3, sociality: 0.6, aggression: 0.1, mutation_rate: 0.05 }),
+            genome: Some(Genome { 
+                size: 0.9, mobility: 1.2, sensory_range: 20.0, physical_strength: 1.0,
+                metabolic_efficiency: 0.7, diet_type: 0.3, thermal_tolerance: 15.0,
+                sociality: 0.6, aggression: 0.1, mutation_rate: 0.05,
+                weight_hunger: 0.8, weight_fatigue: 1.2, weight_social: 1.5
+            }),
             food_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             entertainment_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             sleep_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
@@ -149,7 +167,12 @@ impl UnitTemplate {
     pub fn dwarf() -> Self {
         Self {
             actor_type: ActorType::Dwarf,
-            genome: Some(Genome { size: 0.8, mobility: 0.8, sensory_range: 12.0, metabolic_efficiency: 0.9, diet_type: 0.6, sociality: 0.9, aggression: 0.4, mutation_rate: 0.05 }),
+            genome: Some(Genome { 
+                size: 0.8, mobility: 0.8, sensory_range: 12.0, physical_strength: 1.5,
+                metabolic_efficiency: 0.9, diet_type: 0.6, thermal_tolerance: 20.0,
+                sociality: 0.9, aggression: 0.4, mutation_rate: 0.05,
+                weight_hunger: 1.5, weight_fatigue: 0.8, weight_social: 0.5
+            }),
             food_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             entertainment_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
             sleep_need: Some(NeedExample { current: 90.0, max: 100.0, rate: 0.1, low: 10.0, normal: 25.0, high: 80.0, variance: 5.0 }),
@@ -165,7 +188,12 @@ impl UnitTemplate {
     pub fn rat() -> Self {
         Self {
             actor_type: ActorType::Rat,
-            genome: Some(Genome { size: 0.3, mobility: 1.5, sensory_range: 8.0, metabolic_efficiency: 0.5, diet_type: 0.8, sociality: 0.4, aggression: 0.1, mutation_rate: 0.1 }),
+            genome: Some(Genome { 
+                size: 0.3, mobility: 1.5, sensory_range: 8.0, physical_strength: 0.5,
+                metabolic_efficiency: 0.5, diet_type: 0.8, thermal_tolerance: 10.0,
+                sociality: 0.4, aggression: 0.1, mutation_rate: 0.1,
+                weight_hunger: 2.0, weight_fatigue: 1.0, weight_social: 0.1
+            }),
             food_need: None,
             entertainment_need: None,
             sleep_need: None,
@@ -182,7 +210,12 @@ impl UnitTemplate {
     pub fn spider() -> Self {
         Self {
             actor_type: ActorType::Spider,
-            genome: Some(Genome { size: 0.5, mobility: 1.8, sensory_range: 6.0, metabolic_efficiency: 0.4, diet_type: 1.0, sociality: 0.1, aggression: 0.6, mutation_rate: 0.1 }),
+            genome: Some(Genome { 
+                size: 0.5, mobility: 1.8, sensory_range: 6.0, physical_strength: 0.8,
+                metabolic_efficiency: 0.4, diet_type: 1.0, thermal_tolerance: 15.0,
+                sociality: 0.1, aggression: 0.6, mutation_rate: 0.1,
+                weight_hunger: 1.8, weight_fatigue: 0.5, weight_social: 0.0
+            }),
             food_need: None,
             entertainment_need: None,
             sleep_need: None,
@@ -199,7 +232,12 @@ impl UnitTemplate {
     pub fn crab() -> Self {
         Self {
             actor_type: ActorType::Crab,
-            genome: Some(Genome { size: 0.4, mobility: 0.7, sensory_range: 10.0, metabolic_efficiency: 0.9, diet_type: 0.4, sociality: 0.2, aggression: 0.1, mutation_rate: 0.05 }),
+            genome: Some(Genome { 
+                size: 0.4, mobility: 0.7, sensory_range: 10.0, physical_strength: 1.2,
+                metabolic_efficiency: 0.9, diet_type: 0.4, thermal_tolerance: 5.0,
+                sociality: 0.2, aggression: 0.1, mutation_rate: 0.05,
+                weight_hunger: 0.5, weight_fatigue: 1.5, weight_social: 0.1
+            }),
             food_need: None,
             entertainment_need: None,
             sleep_need: None,
@@ -217,7 +255,12 @@ impl UnitTemplate {
     pub fn cyclops() -> Self {
         Self {
             actor_type: ActorType::Cyclops,
-            genome: Some(Genome { size: 2.5, mobility: 0.6, sensory_range: 15.0, metabolic_efficiency: 0.6, diet_type: 0.9, sociality: 0.1, aggression: 0.9, mutation_rate: 0.02 }),
+            genome: Some(Genome { 
+                size: 2.5, mobility: 0.6, sensory_range: 15.0, physical_strength: 5.0,
+                metabolic_efficiency: 0.6, diet_type: 0.9, thermal_tolerance: 25.0,
+                sociality: 0.1, aggression: 0.9, mutation_rate: 0.02,
+                weight_hunger: 2.5, weight_fatigue: 0.5, weight_social: 0.0
+            }),
             food_need: None,
             entertainment_need: None,
             sleep_need: None,
@@ -268,7 +311,6 @@ impl UnitTemplate {
     }
     pub fn random_attributeset_humanoid() -> Attributeset {
         Attributeset {
-            health: 100,
             strength: 3,
             dexterity: 3,
             constitution: 3,

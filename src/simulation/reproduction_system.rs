@@ -69,6 +69,9 @@ fn mutate_genome(parent: &Genome, rate: f32) -> Genome {
     mutate(&mut child.aggression, 0.0, 1.0);
     mutate(&mut child.sociality, 0.0, 1.0);
     mutate(&mut child.mutation_rate, 0.01, 0.2);
+    mutate(&mut child.weight_hunger, 0.1, 2.0);
+    mutate(&mut child.weight_fatigue, 0.1, 2.0);
+    mutate(&mut child.weight_social, 0.1, 2.0);
 
     child
 }

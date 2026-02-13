@@ -34,9 +34,21 @@ pub fn update_unit_status_text(
         if let Ok((has_name, brain)) = brain_query.get(parent.0) {
             let task_text = match &brain.task {
                 Some(task) => format!("{:?}", task),
-                None => "Thinking...".to_string(),
+                None => "Idle".to_string(),
             };
-            text.0 = format!("{}\n[{}]", has_name.name, task_text);
+            
+            let action_text = match &brain.action {
+                Some(action) => match action {
+                    AtomicAction::Move(_) => "MOV",
+                    AtomicAction::ApplyForce(_, _) => "FRC",
+                    AtomicAction::Consume(_) => "CON",
+                    AtomicAction::Link(_, _) => "LNK",
+                    AtomicAction::Scan => "SCN",
+                },
+                None => "...",
+            };
+
+            text.0 = format!("{}\n[{}] > {}", has_name.name, task_text, action_text);
         }
     }
 }

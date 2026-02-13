@@ -65,7 +65,9 @@ fn main() {
         ))
         .add_plugins((
             rendering::interface::InfoPanelPlugin,
+            rendering::feedback_system::FeedbackPlugin,
             simulation::thinking_system::ThinkingPlugin,
+            simulation::action_system::ActionPlugin,
             simulation::task_system::TaskPlugin,
             simulation::combat_system::CombatPlugin,
             simulation::reproduction_system::ReproductionPlugin,

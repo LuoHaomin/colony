@@ -84,6 +84,16 @@ impl TileType {
             TileType::Void => (0, 0),
         }
     }
+    pub fn material_properties(&self) -> MaterialProperties {
+        match self {
+            TileType::Grass => MaterialProperties { hardness: 0.1, toughness: 0.2, energy_density: 0.5, mass: 1.0, conductivity: 0.8 },
+            TileType::Dirt => MaterialProperties { hardness: 0.3, toughness: 0.5, energy_density: 0.1, mass: 1.5, conductivity: 0.4 },
+            TileType::Water => MaterialProperties { hardness: 0.0, toughness: 0.0, energy_density: 0.0, mass: 1.0, conductivity: 0.9 },
+            TileType::Wall | TileType::WallGame => MaterialProperties { hardness: 5.0, toughness: 10.0, energy_density: 0.0, mass: 10.0, conductivity: 0.1 },
+            TileType::Gravel => MaterialProperties { hardness: 0.8, toughness: 0.3, energy_density: 0.0, mass: 1.8, conductivity: 0.6 },
+            TileType::Void => MaterialProperties::default(),
+        }
+    }
 }
 
 #[derive(Component, Debug, Clone, Default)]
@@ -125,7 +135,18 @@ impl SizeXYZ {
 pub struct MaterialProperties {
     pub mass: f32,
     pub hardness: f32,
+    pub toughness: f32,
     pub energy_density: f32,
+    pub conductivity: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AtomicAction {
+    Move(Position),
+    ApplyForce(Entity, f32), // Target, Force magnitude
+    Consume(Entity),        // Absorb energy
+    Link(Entity, Entity),   // Attach two entities
+    Scan,                   // Perceive surroundings
 }
 
 #[derive(Component, Debug, Clone, Default)]
@@ -134,22 +155,32 @@ pub struct Genome {
     pub size: f32,
     pub mobility: f32,
     pub sensory_range: f32,
+    pub physical_strength: f32,
     // Metabolic
     pub metabolic_efficiency: f32,
     pub diet_type: f32, // 0.0=photosynthetic, 1.0=carnivorous
+    pub thermal_tolerance: f32,
     // Behavioral
     pub aggression: f32,
     pub sociality: f32,
     pub mutation_rate: f32,
+    // Motivation Weights (0.0 to 1.0)
+    pub weight_hunger: f32,
+    pub weight_fatigue: f32,
+    pub weight_social: f32,
 }
 
 impl Genome {
     pub fn genetic_distance(&self, other: &Genome) -> f32 {
         let d = (self.size - other.size).powi(2) +
-                (self.mobility - other.mobility).powi(2) +
+                (self.mobility - other.mobility).powi(4) +
                 (self.metabolic_efficiency - other.metabolic_efficiency).powi(2) +
                 (self.diet_type - other.diet_type).powi(2) +
-                (self.aggression - other.aggression).powi(2);
+                (self.thermal_tolerance - other.thermal_tolerance).powi(2) +
+                (self.physical_strength - other.physical_strength).powi(2) +
+                (self.aggression - other.aggression).powi(2) +
+                (self.weight_hunger - other.weight_hunger).powi(2) +
+                (self.weight_fatigue - other.weight_fatigue).powi(2);
         d.sqrt()
     }
 }
@@ -179,6 +210,7 @@ pub struct Need {
 pub struct PhysicalBody {
     pub energy_storage: f32,
     pub energy_max: f32,
+    pub health: f32,
     pub needs_food: Option<Need>,
     pub needs_sleep: Option<Need>,
     pub needs_entertainment: Option<Need>,
@@ -249,7 +281,6 @@ pub struct Skillset {
 
 #[derive(Clone, Debug, Default)]
 pub struct Attributeset {
-    pub health: i32,
     pub strength: i32,
     pub dexterity: i32,
     pub constitution: i32,
@@ -261,7 +292,9 @@ pub struct Attributeset {
 #[derive(Component, Default)]
 pub struct Brain {
     pub task: Option<Task>,
-    pub task_queue: Vec<Task>, // Add task queue
+    pub task_queue: Vec<Task>,
+    pub action: Option<AtomicAction>,
+    pub action_queue: Vec<AtomicAction>,
     pub personality: Vec<PersonalityTrait>,
     pub memory: Vec<Memory>,
     pub motivation: Option<Motivation>,
@@ -510,6 +543,13 @@ pub struct Attacked {
 #[derive(Component, Default)]
 pub struct TemporaryVisualElement {
     pub duration: f32,
+}
+
+#[derive(Component, Default)]
+pub struct VisualFeedback {
+    pub shake_timer: f32, // Time left to shake
+    pub shake_intensity: f32,
+    pub original_offset: Vec3,
 }
 
 #[derive(Component, Default)]

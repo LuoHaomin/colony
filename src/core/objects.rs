@@ -174,6 +174,20 @@ pub enum ItemType {
 }
 
 impl ItemType {
+    pub fn material_properties(&self) -> MaterialProperties {
+        let name = format!("{:?}", self);
+        match self {
+            ItemType::CedarLog | ItemType::PineLog | ItemType::OakLog | ItemType::Log => 
+                MaterialProperties { hardness: 2.0, toughness: 5.0, energy_density: 30.0, mass: 15.0, conductivity: 0.2 },
+            ItemType::Berry | ItemType::Cabbage | ItemType::Carrot => 
+                MaterialProperties { hardness: 0.1, toughness: 0.1, energy_density: 50.0, mass: 0.5, conductivity: 0.9 },
+            _ if name.contains("Statue") => 
+                MaterialProperties { hardness: 8.0, toughness: 20.0, energy_density: 0.0, mass: 100.0, conductivity: 0.1 },
+            _ if name.contains("Wall") => 
+                MaterialProperties { hardness: 6.0, toughness: 15.0, energy_density: 0.0, mass: 50.0, conductivity: 0.1 },
+            _ => MaterialProperties { hardness: 1.0, toughness: 1.0, energy_density: 1.0, mass: 1.0, conductivity: 0.5 },
+        }
+    }
     pub fn sprite_row_and_col(&self) -> (usize, usize) {
         match self {
             ItemType::CedarLog | ItemType::Log => (94, 30),

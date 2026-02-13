@@ -59,6 +59,7 @@ pub fn generate_map(
                     position,
                     tyle_type.clone(),
                     env_data.clone(),
+                    tyle_type.material_properties(),
                     SizeXYZ::flat(TILE_SIZE),
                     Sprite {
                         image: sprite_sheet.handle.clone(),

@@ -12,9 +12,12 @@ impl Plugin for ThinkingPlugin {
 }
 
 pub fn thinking_system(
-    mut query: Query<(Entity, &mut Brain, &PhysicalBody, Option<&Genome>)>,
+    mut query: Query<(Entity, &mut Brain, &PhysicalBody, &Position, Option<&Genome>)>,
+    targets: Query<(Entity, &Position, &MaterialProperties), Without<Brain>>,
 ) {
-    for (_entity, mut brain, physical_body, genome) in query.iter_mut() {
+    for (entity, mut brain, physical_body, current_pos, genome) in query.iter_mut() {
+        // If already busy with an action or task, skip
+        if brain.action.is_some() || !brain.action_queue.is_empty() { continue; }
         if brain.task.is_some() { continue; }
 
         if !brain.task_queue.is_empty() {
@@ -24,56 +27,83 @@ pub fn thinking_system(
         
         let mut motivations = Vec::new();
 
-        // New Ecology Hunger Choice
+        // Use default weights if no genome (legacy/static entities)
+        let w_hunger = genome.map_or(1.0, |g| g.weight_hunger);
+        let w_fatigue = genome.map_or(1.0, |g| g.weight_fatigue);
+        let w_social = genome.map_or(1.0, |g| g.weight_social);
+
+        // 1. Hunger Assessment
         let hunger_score = (1.0 - physical_body.energy_storage / physical_body.energy_max) * 100.0;
-        if physical_body.energy_storage < physical_body.energy_max * 0.4 {
-             motivations.push((Motivation::Hunger, hunger_score * 1.5));
+        if physical_body.energy_storage < physical_body.energy_max * 0.8 {
+             motivations.push((Motivation::Hunger, hunger_score * 1.5 * w_hunger));
         }
 
-        // Tired
+        // 2. Fatigue (Sleep)
         if let Some(n) = &physical_body.needs_sleep {
             let energy_score = (1.0 - n.current / n.max) * 100.0;
             if n.current < n.low {
-                motivations.push((Motivation::Tired, energy_score * 2.0));
-            } else if n.current < n.normal {
-                motivations.push((Motivation::Tired, energy_score * 0.3));
+                motivations.push((Motivation::Tired, energy_score * 2.0 * w_fatigue));
             }
         }
 
-        // Boredom
+        // 3. Social/Boredom
         if let Some(n) = &physical_body.needs_entertainment {
             let boredom_score = (1.0 - n.current / n.max) * 100.0;
             if n.current < n.low {
-                motivations.push((Motivation::Bored, boredom_score));
+                motivations.push((Motivation::Bored, boredom_score * w_social));
             }
         }
 
-        // Pick highest score motivation
         motivations.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        if let Some((best_m, _)) = motivations.first() {
-            brain.motivation = Some(*best_m);
-        } else {
-            brain.motivation = Some(Motivation::Idle);
-        }
+        let best_motivation = motivations.first().map(|(m, _)| *m).unwrap_or(Motivation::Idle);
+        brain.motivation = Some(best_motivation);
 
-        if let Some(m) = brain.motivation {
-            match m {
-                Motivation::Hunger => {
-                    if let Some(g) = genome {
-                        if g.diet_type > 0.5 {
-                            brain.task = Some(Task::Hunt);
-                        } else {
-                            brain.task = Some(Task::Eat);
+        match best_motivation {
+            Motivation::Hunger => {
+                // Look for nearby high energy density items
+                let mut best_target: Option<(Entity, Position)> = None;
+                let mut max_score = -1.0;
+
+                for (t_entity, t_pos, t_material) in targets.iter() {
+                    if t_material.energy_density > 0.1 {
+                        let dist = current_pos.distance(t_pos) as f32;
+                        let score = t_material.energy_density / (dist * 0.1 + 1.0);
+                        if score > max_score {
+                            max_score = score;
+                            best_target = Some((t_entity, *t_pos));
                         }
-                    } else {
-                        brain.task = Some(Task::Eat);
                     }
-                },
-                Motivation::Tired => brain.task = Some(Task::Sleep),
-                Motivation::Bored => brain.task = Some(Task::Play),
-                Motivation::Idle => brain.task = Some(Task::Meander),
-                _ => brain.task = Some(Task::Idle),
+                }
+
+                if let Some((target_id, target_pos)) = best_target {
+                    // Generate atomic sequence: Move -> Consume
+                    brain.action_queue.push(AtomicAction::Move(target_pos));
+                    brain.action_queue.push(AtomicAction::Consume(target_id));
+                    info!("Entity {:?} decided to get food at {:?}", entity, target_pos);
+                } else {
+                    // No food found, meander
+                    brain.action_queue.push(AtomicAction::Move(Position { 
+                        x: current_pos.x + rand::rng().random_range(-5..6),
+                        y: current_pos.y + rand::rng().random_range(-5..6),
+                        z: current_pos.z 
+                    }));
+                }
+            },
+            Motivation::Idle | Motivation::Meander => {
+                brain.action_queue.push(AtomicAction::Move(Position { 
+                    x: current_pos.x + rand::rng().random_range(-3..4),
+                    y: current_pos.y + rand::rng().random_range(-3..4),
+                    z: current_pos.z 
+                }));
+            },
+            _ => {
+                // Fallback to legacy task system for other motivations
+                match best_motivation {
+                    Motivation::Tired => brain.task = Some(Task::Sleep),
+                    Motivation::Bored => brain.task = Some(Task::Play),
+                    _ => brain.task = Some(Task::Idle),
+                }
             }
         }
     }
