@@ -12,6 +12,8 @@ pub fn action_processor_system(
     mut commands: Commands,
     mut actors: Query<(Entity, &mut Brain, &mut Position, &mut Transform, Option<&Genome>)>,
     mut physics: Query<(Option<&mut PhysicalBody>, &MaterialProperties)>,
+    q_tool_physics: Query<&MaterialProperties, Without<Brain>>,
+    q_children: Query<&Children>,
 ) {
     for (entity, mut brain, mut pos, mut transform, _genome) in actors.iter_mut() {
         if brain.action.is_none() && !brain.action_queue.is_empty() {
@@ -35,9 +37,21 @@ pub fn action_processor_system(
                     }
                     *transform = pos.to_transform();
                 },
-                AtomicAction::ApplyForce(target_entity, force) => {
+                AtomicAction::ApplyForce(target_entity, base_force) => {
+                    let mut effective_force = base_force;
+                    
+                    // TOOL LOGIC: Check if holding anything that adds force/hardness
+                    if let Ok(children) = q_children.get(entity) {
+                        for child in children.iter() {
+                            if let Ok(tool_mat) = q_tool_physics.get(child) {
+                                // A tool's hardness and mass contribute to the force of a strike
+                                effective_force += (tool_mat.hardness * 0.5) + (tool_mat.mass * 0.1);
+                            }
+                        }
+                    }
+
                     if let Ok((target_body, material)) = physics.get_mut(target_entity) {
-                        let damage = (force - material.hardness).max(0.1);
+                        let damage = (effective_force - material.hardness).max(0.1);
                         
                         // Add visual feedback to target
                         commands.entity(target_entity).insert(VisualFeedback {
@@ -50,8 +64,7 @@ pub fn action_processor_system(
                             // Target is biological/has health
                             b.health -= damage;
                         } else {
-                            // Target is inanimate - maybe damage its mass/toughness?
-                            // For now just despawn if force is enough
+                            // Target is inanimate - despawn if force overcomes toughness
                             if damage > material.toughness {
                                 commands.entity(target_entity).despawn();
                             }
@@ -81,8 +94,10 @@ pub fn action_processor_system(
                     }
                     brain.action = None;
                 },
-                AtomicAction::Link(_, _) => {
-                    // Logic for carrying/combining
+                AtomicAction::Link(parent, child) => {
+                    commands.entity(parent).add_child(child);
+                    // Hide child visual while linked or offset it
+                    commands.entity(child).insert(Visibility::Hidden);
                     brain.action = None;
                 },
                 AtomicAction::Scan => {

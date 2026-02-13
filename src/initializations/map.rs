@@ -3,7 +3,7 @@
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         // Map is generated once at Startup in main.rs, 
         // no need to re-generate on state change.
     }

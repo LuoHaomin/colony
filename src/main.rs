@@ -6,27 +6,21 @@ mod simulation;
 mod rendering;
 mod initializations;
 
-use crate::core::*;
-use crate::simulation::*;
-use crate::rendering::*;
-use crate::initializations::*;
-use crate::rendering::camera_system::CameraPlugin;
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(CurrentDisplayZ { z: 0 })
         .add_plugins((
-             initializations::biome::BiomePlugin,
-             initializations::startup::StartupPlugin,
-             CameraPlugin,
+             initializations::BiomePlugin,
+             initializations::StartupPlugin,
+             rendering::CameraPlugin,
         ))
         .add_systems(
             PreStartup, (
-                initializations::load::load_sprites, 
-                initializations::load::load_font, 
-                initializations::load::load_sfx,
-                initializations::load::load_mesh_assets
+                initializations::load_sprites, 
+                initializations::load_font, 
+                initializations::load_sfx,
+                initializations::load_mesh_assets
             )
         )
         .insert_resource(SelectedObjectInformation::default())
@@ -45,32 +39,32 @@ fn main() {
         })
         .add_systems(
             Startup, (
-                initializations::map::generate_map, 
+                initializations::generate_map, 
                 setup_camera, 
-                rendering::text_system::text_test, 
-                initializations::window_system::set_window_title, 
-                initializations::window_system::set_window_maximized
+                rendering::text_test, 
+                initializations::set_window_title, 
+                initializations::set_window_maximized
             )
         )
         .init_state::<GameState>()
         .add_plugins((
-            rendering::interface::MainMenusPlugin, 
-            rendering::selection_systems::SelectionPlugin,
+            rendering::MainMenusPlugin, 
+            rendering::SelectionPlugin,
             simulation::monstergenerator_system::MonsterGeneratorPlugin,
             simulation::seasons::SeasonsPlugin,
             simulation::needs::NeedsPlugin,
-            rendering::interface::GameUiPlugin,
+            rendering::GameUiPlugin,
         ))
         .add_plugins((
-            rendering::interface::InfoPanelPlugin,
-            rendering::feedback_system::FeedbackPlugin,
+            rendering::InfoPanelPlugin,
+            rendering::FeedbackPlugin,
             simulation::thinking_system::ThinkingPlugin,
             simulation::action_system::ActionPlugin,
             simulation::task_system::TaskPlugin,
             simulation::reproduction_system::ReproductionPlugin,
             simulation::spoilage_system::SpoilagePlugin,
-            rendering::interface::ClickPlugin,
-            rendering::visibility_system::VisibilityPlugin
+            rendering::ClickPlugin,
+            rendering::VisibilityPlugin
         ))
         .add_systems(
             FixedUpdate, (
@@ -80,16 +74,16 @@ fn main() {
         )
         .add_systems(
             Update, (
-                rendering::statusdisplay_system::status_display_system
+                rendering::status_display_system
                     .run_if(bevy::time::common_conditions::on_timer(std::time::Duration::from_secs_f32(0.5))),
-                rendering::text_system::text_system,
-                rendering::names_system::names_system,
-                rendering::names_system::update_unit_status_text,
-                rendering::text_system::text_update_system,
-                rendering::interface::scrollwheel_input,
+                rendering::text_system,
+                rendering::names_system,
+                rendering::update_unit_status_text,
+                rendering::text_update_system,
+                rendering::scrollwheel_input,
             ).run_if(in_state(GameState::InGame))
         )
-        .add_systems(Update, rendering::interface::keyboard_input)
+        .add_systems(Update, rendering::keyboard_input)
         .run();
 }
 

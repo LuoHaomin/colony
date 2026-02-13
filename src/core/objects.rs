@@ -62,13 +62,6 @@ impl ItemType {
         }
     }
 
-    pub fn passable(&self) -> bool {
-        match self {
-            ItemType::Wall | ItemType::Statue | ItemType::Tree => false,
-            _ => true,
-        }
-    }
-
     pub fn add_components(&self, _commands: &mut Commands, _entity: Entity) {
         // Physical properties are now handled via components at spawn time
     }
@@ -76,6 +69,7 @@ impl ItemType {
 
 impl Object {
     pub fn passable(&self) -> bool {
-        self.itemtype.passable()
+        // Logic will eventually move to generic navigation system checking MaterialProperties
+        !self.itemtype.material_properties().is_obstacle()
     }   
 }

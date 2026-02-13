@@ -72,7 +72,7 @@ pub enum TileType {
 
 impl TileType {
     pub fn is_wall(&self) -> bool {
-        matches!(self, TileType::Wall | TileType::WallGame)
+        self.material_properties().is_obstacle()
     }
     pub fn get_texture_coords(&self) -> (u32, u32) {
         match self {
@@ -138,6 +138,13 @@ pub struct MaterialProperties {
     pub toughness: f32,
     pub energy_density: f32,
     pub conductivity: f32,
+}
+
+impl MaterialProperties {
+    pub fn is_obstacle(&self) -> bool {
+        // High toughness and mass block movement
+        self.toughness > 4.0 && self.mass > 10.0
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

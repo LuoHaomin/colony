@@ -67,7 +67,6 @@ pub fn spawn_settlers(
 pub fn spawn_starting_stuff(
     mut commands: Commands,
     biome: Res<Biome>,
-    mesh_assets: Res<UniversalMeshAssets>,
     sprite_sheet: Res<SpriteSheet>,
     tilehash: Res<TileHash>,
 ) {

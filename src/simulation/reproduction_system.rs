@@ -85,9 +85,11 @@ fn spawn_child(
     actor_type: ActorType,
     initial_energy: f32,
 ) {
+    let energy_max = 100.0 * genome.size;
     let physical_body = PhysicalBody {
-        energy_max: 100.0 * genome.size,
-        energy_storage: initial_energy.min(100.0 * genome.size),
+        energy_max,
+        energy_storage: initial_energy.min(energy_max),
+        health: 100.0,
         ..default()
     };
 
@@ -105,8 +107,15 @@ fn spawn_child(
         genome.clone(),
         Generation { value: generation },
         ReproductionStatus {
-            energy_threshold: 100.0 * genome.size * 0.8,
+            energy_threshold: energy_max * 0.8,
             last_reproduction_tick: 0,
+        },
+        MaterialProperties {
+            mass: 1.0 * genome.size,
+            hardness: 1.0,
+            toughness: 1.0,
+            energy_density: 1.0,
+            conductivity: 1.0,
         },
         physical_body,
         actor_type,

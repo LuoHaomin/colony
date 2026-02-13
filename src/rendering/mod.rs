@@ -14,3 +14,4 @@ pub use names_system::*;
 pub use selection_systems::*;
 pub use camera_system::*;
 pub use feedback_system::*;
+pub use visibility_system::*;
